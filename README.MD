@@ -44,6 +44,7 @@ EventNexus/
 ├── data/
 │   ├── raw/                 # source data (not tracked by git)
 │   └── processed/           # converted and cleaned datasets (not tracked by git)
+├── docs/                    # data dictionary
 ├── models/                  # downloaded and trained models (not tracked by git)
 ├── notebooks/               # exploration
 ├── src/                     # pipeline code and setup scripts
