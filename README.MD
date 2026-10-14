@@ -2,7 +2,7 @@
 
 Knowledge-graph and NLP tool for cross-event analysis of Karachi security incidents. Links events through shared actors, targets, and areas using Neo4j, entity recognition, embeddings, and trained models, with evidence-backed answers.
 
-> **Status:** work in progress. Setup is under way; the analysis pipeline is being built.
+> **Status:** work in progress. Setup is complete; data triage and graph design are next.
 
 ## What it does
 
@@ -21,7 +21,7 @@ Every answer points back to the specific events it came from, so results can be 
 3. **NLP:** named-entity recognition on incident summaries adds finer-grained entities (neighbourhoods, organisations) to the graph.
 4. **Embeddings and clustering:** summaries are embedded so events can be compared by what happened, then grouped into patterns.
 5. **Trained models:** a fine-tuned text classifier and an event-similarity model.
-6. **Question answering:** a language model turns questions into graph queries and summarises the results with event citations.
+6. **Question answering:** a language model turns questions into graph queries and summarises the results with event citations. A hosted model is used during development, with a local model (via Ollama) as the offline fallback.
 7. **Interface:** a FastAPI backend with a browser UI showing the answer, the evidence trail, and the graph.
 
 Design goal: after a one-time download of the models, the whole application runs without internet.
@@ -31,6 +31,7 @@ Design goal: after a one-time download of the models, the whole application runs
 - **Graph database:** Neo4j (local, via Neo4j Desktop)
 - **NLP:** spaCy, GLiNER, Hugging Face Transformers, sentence-transformers
 - **ML:** PyTorch, scikit-learn, UMAP
+- **Language model:** Gemini API (development) and Ollama with a small local model (offline mode)
 - **Backend:** FastAPI, Uvicorn
 - **Frontend:** plain HTML, CSS, JavaScript with D3
 - **Language:** Python 3.12
@@ -39,16 +40,17 @@ Design goal: after a one-time download of the models, the whole application runs
 
 ```
 EventNexus/
-├── app/            # API and frontend
+├── app/                     # API and frontend
 ├── data/
-│   ├── raw/        # source data (not tracked by git)
-│   └── processed/  # cleaned datasets
-├── models/         # downloaded and trained models (not tracked by git)
-├── notebooks/      # exploration
-├── src/            # pipeline code and setup scripts
-├── .env            # local credentials (not tracked by git)
-├── requirements.txt
-└── requirements-lock.txt
+│   ├── raw/                 # source data (not tracked by git)
+│   └── processed/           # converted and cleaned datasets (not tracked by git)
+├── models/                  # downloaded and trained models (not tracked by git)
+├── notebooks/               # exploration
+├── src/                     # pipeline code and setup scripts
+├── .env                     # local credentials (not tracked by git)
+├── DECISIONS.md             # log of design decisions and the reasons for them
+├── requirements.txt         # top-level dependencies
+└── requirements-lock.txt    # exact versions used during development
 ```
 
 ## Setup
@@ -99,6 +101,9 @@ NEO4J_URI=neo4j://127.0.0.1:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_password_here
 NEO4J_DATABASE=eventnexus-db
+
+LLM_PROVIDER=gemini
+GEMINI_API_KEY=your_key_here
 ```
 
 ### 6. Data
@@ -107,6 +112,12 @@ The raw data is not included in this repository. EventNexus uses the Global Terr
 
 ```
 data/raw/raw.xlsx
+```
+
+Then convert it once to Parquet, so later steps load in seconds instead of minutes:
+
+```
+python src/convert_to_parquet.py
 ```
 
 ### 7. Models
@@ -123,17 +134,30 @@ python src/download_models.py
 | Embeddings | `sentence-transformers/all-MiniLM-L6-v2` |
 | Classifier base | `distilbert-base-uncased` |
 
-### 8. Verify the setup
+### 8. Language model
+
+The application can use a hosted model or a local one.
+
+- **Hosted (development):** create an API key in [Google AI Studio](https://aistudio.google.com) and put it in `.env` as `GEMINI_API_KEY`.
+- **Local (offline mode):** install [Ollama](https://ollama.com), then pull a small model:
+
+```
+ollama pull llama3.2:1b
+```
+
+### 9. Verify the setup
 
 ```
 python src/check_imports.py     # all libraries import
 python src/test_neo4j.py        # database connection works
 python src/test_models.py       # models load and run
+python src/smoke_test.py        # one event through Neo4j, embedding and LLM
+uvicorn app.main:app --reload   # stub app at http://127.0.0.1:8000
 ```
 
 ## Roadmap
 
-- [ ] Setup (environment, Neo4j, libraries, models)
+- [x] Setup (environment, Neo4j, libraries, models)
 - [ ] Data triage and cleaning
 - [ ] Graph design
 - [ ] Graph build
