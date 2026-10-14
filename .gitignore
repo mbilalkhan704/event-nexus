@@ -1,0 +1,37 @@
+# Data (large and/or licensed; never commit)
+data/
+
+# Models and embeddings
+models/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.npy
+
+# Secrets
+.env
+.env.*
+
+# Python environment and caches
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# Neo4j local data (if you run it via Docker with a mounted folder)
+neo4j/data/
+neo4j/logs/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
