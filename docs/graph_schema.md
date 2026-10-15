@@ -20,7 +20,7 @@ Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_
 
 | Node | Key | Source | Phase |
 |---|---|---|---|
-| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `nkill`, `nwound`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`; later `embedding` and `cluster` | 3 |
+| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `city_raw`, `nkill`, `nwound`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`. Readable text copies for display: `gname`, `attack_type`, `weapon_type`, `weapon_subtype`, `weapon_detail`, `target_type`, `target_subtype`, `target_org`, `target_desc`, `motive`. Later: `embedding`, `cluster` | 3 |
 | `Group` | `name` | `gname`, only when `actor_known` | 3 |
 | `AttackType` | `name` | `attacktype1_txt` | 3 |
 | `WeaponType` | `name` | `weaptype1_txt` (the subtype stays a property on the edge) | 3 |
@@ -106,3 +106,19 @@ RETURN type(r), r.rule, r.strength, r.evidence
 ## Naming conventions
 
 Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and properties are snake_case.
+
+## Loaded graph (Phase 3)
+
+| Nodes | Count | Relationships | Count |
+|---|---|---|---|
+| Event | 1,664 | REPORTED_BY | 3,542 |
+| Source | 2,965 | HAS_ATTACK_TYPE | 1,649 |
+| TargetOrg | about 381 | TARGETED | 1,632 |
+| Group | 39 | USED_WEAPON | 1,625 |
+| TargetType | 19 | TARGETED_ORG | about 1,194 |
+| AttackType | 7 | SAME_ACTOR_NEARBY | 632 |
+| WeaponType | 7 | SAME_SOURCE | 607 |
+| | | ATTRIBUTED_TO | 326 |
+| | | GTD_RELATED | 118 |
+
+`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_ALIASES` in `src/config.py`). Rebuild everything with `python src/build_graph.py --reset`, and verify with `python src/check_graph.py`.

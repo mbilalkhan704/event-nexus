@@ -28,3 +28,8 @@
 | GTD related is evaluation only | GTD_RELATED pairs are never used to build links, retrieve results or train models | Prevents a circular evaluation |
 | `multiple` is a property only | Not used as a link rule or model feature | It is tied to GTD's own relatedness judgement |
 | Rule parameters | Windows and thresholds live in one config dictionary | Tuning never means rewriting rules |
+| Placeholder organisations | "Not Applicable" and "Civilian(s)" create no TargetOrg node | They mean no organisation, and would form false hubs (140 events) |
+| Organisation aliases | Spelling variants of the same organisation are merged (MQM, MQM-H, ANP, PPP, police) | Prevents one organisation being split across nodes and losing links |
+| Rebuildable graph | `build_graph.py --reset` rebuilds the whole graph; running it twice gives identical counts; `check_graph.py` verifies it | Reproducibility |
+| Source links reach the unknown actors | 607 SAME_SOURCE links connect 524 of 1,338 unattributed events (39%) | The cross-event value for the 80% with no named group |
+| Fair evaluation of GTD pairs | GTD_RELATED is tested against text similarity alone, not against source or actor links | 115 of 118 GTD pairs are already linked by shared sources or same actor, so those links would make the test too easy |
