@@ -18,3 +18,13 @@
 | Area from text | Neighbourhoods are extracted from location and summary text, not coordinates | 1,627 of 1,664 events share one city-centre coordinate |
 | Columns kept | 30 of 135 (identity, place, actor, method, target, outcome, cross-event hints, text, evidence) | Chosen for linking events, describing them, or evidence; the rest are mostly empty or redundant |
 | Unknown is not a link | Values labelled "Unknown" (and generic groups) never create shared-attribute links in the graph | Two unknowns don't mean the same thing |
+| Graph questions | 15 questions in 5 tiers (lookup, cross-event patterns, multi-hop chains, provenance, similarity); 12 of them are cross-event | The schema is built backwards from the questions, so every structure earns its place |
+| Graph nodes | Event, Group, AttackType, WeaponType, TargetType, TargetOrg, Source, and Area (from entity recognition in Phase 4) | These are the things events connect through |
+| Unknown means no edge | An event with an unknown weapon, target or group simply has no edge of that kind; the text value stays on the event for display | Makes "Unknown is not a link" structural, not just a query habit |
+| Confidence on edges | `claimed` and `uncertain` are stored on the ATTRIBUTED_TO edge | Confidence belongs to the link between an event and a group, not to the group |
+| Derived cross-event links | SAME_ACTOR_NEARBY, SAME_SOURCE, SAME_MO_LOCAL, FOLLOWED_BY, SIMILAR_TO; each stores rule, strength and evidence | Every link can explain why it exists, which answers "why are these linked?" |
+| Same-actor window | 30 days, with gap_days stored on each edge (236 pairs within 7 days, 632 within 30, 1,446 within 90) | Captures campaign waves without a flood of loose links; other windows stay queryable |
+| Shared sources link events | 411 citations are shared by 2 or more events, covering 664 events (40%); SAME_SOURCE links them regardless of actor, with a cap for very widely shared citations (to be set after a distribution check) | Reaches the 80% of events with an unknown actor |
+| GTD related is evaluation only | GTD_RELATED pairs are never used to build links, retrieve results or train models | Prevents a circular evaluation |
+| `multiple` is a property only | Not used as a link rule or model feature | It is tied to GTD's own relatedness judgement |
+| Rule parameters | Windows and thresholds live in one config dictionary | Tuning never means rewriting rules |
