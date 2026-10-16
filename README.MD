@@ -2,7 +2,7 @@
 
 Knowledge-graph and NLP tool for cross-event analysis of Karachi security incidents. Links events through shared actors, targets, and areas using Neo4j, entity recognition, embeddings, and trained models, with evidence-backed answers.
 
-> **Status:** work in progress. Setup is complete; data triage and graph design are next.
+> **Status:** work in progress. Setup, data triage, graph design and graph build are complete; working on entity recognition.
 
 ## What it does
 
@@ -159,9 +159,9 @@ uvicorn app.main:app --reload   # stub app at http://127.0.0.1:8000
 ## Roadmap
 
 - [x] Setup (environment, Neo4j, libraries, models)
-- [ ] Data triage and cleaning
-- [ ] Graph design
-- [ ] Graph build
+- [x] Data triage and cleaning
+- [x] Graph design
+- [x] Graph build
 - [ ] Entity recognition on summaries
 - [ ] Embeddings and clustering
 - [ ] Trained models
