@@ -10,7 +10,8 @@ Event -[HAS_ATTACK_TYPE]-> AttackType
 Event -[USED_WEAPON]-> WeaponType
 Event -[TARGETED]-> TargetType
 Event -[TARGETED_ORG]-> TargetOrg
-Event -[OCCURRED_IN {method, confidence}]-> Area
+Event -[OCCURRED_IN {method}]-> Area
+Event -[OCCURRED_AT]-> Locality -[PART_OF]-> Area
 Event -[REPORTED_BY {dbsource}]-> Source
 
 Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_TO | GTD_RELATED]- Event
@@ -27,7 +28,8 @@ Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_
 | `TargetType` | `name` | `targtype1_txt` | 3 |
 | `TargetOrg` | `name` | `corp1` | 3 |
 | `Source` | `citation` | `scite1` to `scite3` | 3 |
-| `Area` | `name` | Neighbourhoods extracted from `location` and the summary | 4 |
+| `Area` | `name` | Town or neighbourhood level place, used for linking and counting. Extracted from the location text and the summary; a name must appear in 2 or more events. Sub-areas roll up into their town through a hand-written map | 4 |
+| `Locality` | `name` | The specific place a text names, kept only when it rolls up into a bigger Area (for example Gulshan-e-Maymar, Manghopir, Qasba Colony) | 4 |
 
 ## Event-to-attribute relationships
 
@@ -35,10 +37,14 @@ Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_
 |---|---|---|
 | `ATTRIBUTED_TO` | `claimed`, `uncertain` | Confidence lives on the link, not on the group |
 | `HAS_ATTACK_TYPE`, `USED_WEAPON`, `TARGETED`, `TARGETED_ORG` | | |
-| `OCCURRED_IN` | `method` (pattern or GLiNER), `confidence` | |
+| `OCCURRED_IN` | `method` (location_pattern, city_field, summary_pattern or summary_gazetteer) | Event to Area. At most one per event |
 | `REPORTED_BY` | `dbsource` | |
+| `OCCURRED_AT` | | Event to Locality. Shows the specific place when it is known |
+| `PART_OF` | | Locality to Area (Gulshan-e-Maymar is part of Gadap) |
 
 **Unknown means no edge.** An event whose weapon, target, organisation or group is "Unknown" simply has no edge of that kind. The text value stays on the event for display.
+
+**Two levels of place.** The Area is the town-level group used for linking and counting. The Locality is the specific sub-area the text names, kept whenever it differs from the Area. A detail view shows both, for example "Gadap, Gulshan-e-Maymar".
 
 ## Derived cross-event links
 
@@ -48,8 +54,8 @@ Each link stores `rule`, `strength` and `evidence` (which attributes matched). S
 |---|---|---|
 | `SAME_ACTOR_NEARBY` | Same known group within 30 days. `gap_days` stored. Sizing: 236 pairs within 7 days, 632 within 30, 1,446 within 90 | 3 |
 | `SAME_SOURCE` | Share a citation shared by 2 to 10 events. Strength is the number of shared citations. Sizing: 411 citations shared by 2+ events, covering 664 events (40%); the largest is shared by 7 | 3 |
-| `SAME_MO_LOCAL` | Same attack type, weapon type and target type, same Area, within 30 days | 4 |
-| `FOLLOWED_BY` | Same Area, within 7 days, directed earlier to later, with `gap_days` | 4 |
+| `SAME_MO_LOCAL` | Same Area, same attack type, weapon type and target type (Unknown never counts), within 30 days. Properties: `gap_days`, `same_locality`. 184 links | 4 |
+| `FOLLOWED_BY` | The next event in the same Area, if it comes within 7 days. Directed earlier to later, with `gap_days` and `same_locality`. Forms chains, not all pairs. 280 links; the longest chain has 13 links (20 January to 24 February 2014) | 4 |
 | `SIMILAR_TO` | Top 5 embedding neighbours per event, with a similarity score and a cut-off set in Phase 5 | 5 |
 | `GTD_RELATED` | GTD's own related pairs (118 in-scope pairs, 111 with different text). **Evaluation only** | 3 |
 
@@ -60,6 +66,7 @@ Each link stores `rule`, `strength` and `evidence` (which attributes matched). S
 3. **`GTD_RELATED` never feeds the system.** It is not used to build links, retrieve results or train models.
 4. **`multiple` is a property only,** not a link rule or model feature.
 5. **Every derived link can explain itself** through its `rule`, `strength` and `evidence`.
+6. **Two levels of place.** Linking uses the Area; the Locality keeps the detail.
 
 ## Rule parameters
 
@@ -79,7 +86,7 @@ GRAPH_RULES = {
 
 | Type | On | Phase |
 |---|---|---|
-| Uniqueness | `Event.eventid`, `Group.name`, `AttackType.name`, `WeaponType.name`, `TargetType.name`, `TargetOrg.name`, `Source.citation`, `Area.name` | 3 (Area in 4) |
+| Uniqueness | `Event.eventid`, `Group.name`, `AttackType.name`, `WeaponType.name`, `TargetType.name`, `TargetOrg.name`, `Source.citation`, `Area.name`, `Locality.name` | 3 (Area and Locality in 4) |
 | Range index | `Event.date` | 3 |
 | Vector index | `Event.embedding` (384 dimensions, cosine) | 5 |
 | Full-text index | `Event.summary_clean` | 8 |
@@ -103,22 +110,43 @@ MATCH (a:Event {eventid: $a})-[r]-(b:Event {eventid: $b})
 RETURN type(r), r.rule, r.strength, r.evidence
 ```
 
+Where did an event happen, down to the specific place? (run in Phase 4)
+
+```cypher
+MATCH (e:Event)-[:OCCURRED_AT]->(l:Locality {name: 'Gulshan-e-Maymar'})
+MATCH (e)-[:OCCURRED_IN]->(a:Area)
+RETURN e.eventid, e.date, a.name AS area, l.name AS locality, e.location LIMIT 3
+```
+
+The longest escalation chains (run in Phase 4):
+
+```cypher
+MATCH p = (a:Event)-[:FOLLOWED_BY*]->(b:Event)
+WHERE NOT ()-[:FOLLOWED_BY]->(a) AND NOT (b)-[:FOLLOWED_BY]->()
+RETURN a.eventid, b.eventid, length(p) AS links ORDER BY links DESC LIMIT 5
+```
+
 ## Naming conventions
 
 Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and properties are snake_case.
 
-## Loaded graph (Phase 3)
+## Loaded graph (Phases 3 and 4)
 
 | Nodes | Count | Relationships | Count |
 |---|---|---|---|
 | Event | 1,664 | REPORTED_BY | 3,542 |
 | Source | 2,965 | HAS_ATTACK_TYPE | 1,649 |
-| TargetOrg | about 381 | TARGETED | 1,632 |
-| Group | 39 | USED_WEAPON | 1,625 |
-| TargetType | 19 | TARGETED_ORG | about 1,194 |
-| AttackType | 7 | SAME_ACTOR_NEARBY | 632 |
-| WeaponType | 7 | SAME_SOURCE | 607 |
-| | | ATTRIBUTED_TO | 326 |
+| TargetOrg | 380 | TARGETED | 1,632 |
+| Area | 95 | USED_WEAPON | 1,625 |
+| Locality | 43 | OCCURRED_IN | 1,239 |
+| Group | 39 | TARGETED_ORG | 1,194 |
+| TargetType | 19 | SAME_ACTOR_NEARBY | 632 |
+| AttackType | 7 | SAME_SOURCE | 607 |
+| WeaponType | 7 | ATTRIBUTED_TO | 326 |
+| | | FOLLOWED_BY | 280 |
+| | | OCCURRED_AT | 225 |
+| | | SAME_MO_LOCAL | 184 |
 | | | GTD_RELATED | 118 |
+| | | PART_OF | 43 |
 
-`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_ALIASES` in `src/config.py`). Rebuild everything with `python src/build_graph.py --reset`, and verify with `python src/check_graph.py`.
+`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Rebuild everything with `python src/build_graph.py --reset`, and verify with `python src/check_graph.py` (16 checks).

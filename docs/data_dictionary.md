@@ -9,34 +9,34 @@
 
 ## Columns kept from GTD (30)
 
-| Column | Meaning | Planned role |
+| Column | Meaning | Role in the graph |
 |---|---|---|
-| `eventid` | Unique 12-digit event ID | Node key for each event |
-| `iyear`, `imonth`, `iday` | Year, month and day of the incident (0 means unknown) | Time; combined into `date` |
+| `eventid` | Unique 12-digit event ID (an identifier, not a date) | Key of the `Event` node |
+| `iyear`, `imonth`, `iday` | Year, month and day of the incident (0 means unknown) | Combined into `date` |
 | `city` | City of the incident (set to "Karachi" for all rows, see `city_raw`) | Constant |
-| `location` | Free-text note about the specific location (83% filled) | Text source for neighbourhood extraction |
-| `gname` | Perpetrator group as recorded by GTD ("Unknown" for about 80% of events) | Actor link, when known |
-| `guncertain1` | 1 if the attribution to the group is suspected rather than confirmed | Attribution confidence |
-| `claimed` | Whether a group claimed responsibility (1 yes, 0 no, missing unknown) | Attribution evidence |
-| `attacktype1_txt` | Primary attack type | Attack-type link; classifier label candidate |
-| `weaptype1_txt` | Primary weapon category | Weapon link |
-| `weapsubtype1_txt` | Weapon subtype | Finer weapon link |
-| `weapdetail` | Free-text weapon description (50% filled) | Text for entity recognition |
-| `targtype1_txt` | Primary target category | Target-type link |
-| `targsubtype1_txt` | Target subcategory | Finer target link |
-| `corp1` | Organisation targeted | Target organisation |
-| `target1` | Description of the specific target or victim | Target description |
-| `nkill` | Confirmed fatalities (GTD counts victims and attackers) | Severity |
-| `nwound` | Confirmed non-fatal injuries | Severity |
+| `location` | Free-text note about the specific location (83% filled) | Main text source for place extraction (Area and Locality) |
+| `gname` | Perpetrator group as recorded by GTD ("Unknown" for about 80% of events) | `Group` node, only when the actor is known |
+| `guncertain1` | 1 if the attribution to the group is suspected rather than confirmed | Property `uncertain` on the `ATTRIBUTED_TO` edge |
+| `claimed` | Whether a group claimed responsibility (1 yes, 0 no, missing unknown) | Property `claimed` on the `ATTRIBUTED_TO` edge |
+| `attacktype1_txt` | Primary attack type | `AttackType` node; classifier label candidate |
+| `weaptype1_txt` | Primary weapon category | `WeaponType` node |
+| `weapsubtype1_txt` | Weapon subtype | Property `subtype` on the `USED_WEAPON` edge |
+| `weapdetail` | Free-text weapon description (50% filled) | Event property `weapon_detail` (display) |
+| `targtype1_txt` | Primary target category | `TargetType` node |
+| `targsubtype1_txt` | Target subcategory | Property `subtype` on the `TARGETED` edge |
+| `corp1` | Organisation targeted | `TargetOrg` node (placeholders ignored, spelling variants merged) |
+| `target1` | Description of the specific target or victim | Event property `target_desc` (display) |
+| `nkill` | Confirmed fatalities (GTD counts victims and attackers) | Event property |
+| `nwound` | Confirmed non-fatal injuries | Event property |
 | `success` | Whether the attack achieved its immediate objective, as GTD defines it per attack type | Event property |
 | `suicide` | 1 if a suicide attack | Event property |
-| `multiple` | 1 if the event is part of a multiple (coordinated) incident | Coordinated-attack hint |
-| `related` | IDs of events that GTD analysts marked as related (10% filled) | Evaluation answer key |
-| `doubtterr` | 1 if there is doubt the incident meets GTD's terrorism criteria | Quality flag |
-| `summary` | GTD's narrative description of the event | Original text |
-| `motive` | Stated or inferred motive (44% filled) | Extra text |
-| `scite1`, `scite2`, `scite3` | Source citations (news articles); 100%, 70% and 44% filled | Evidence trail |
-| `dbsource` | The data source that supplied the record | Evidence trail |
+| `multiple` | 1 if the event is part of a multiple (coordinated) incident | Event property only; not a link rule or model feature, because it reflects GTD's own relatedness judgement |
+| `related` | IDs of events that GTD analysts marked as related (10% filled) | `GTD_RELATED` links, used for evaluation only |
+| `doubtterr` | 1 if there is doubt the incident meets GTD's terrorism criteria | Event property (quality flag) |
+| `summary` | GTD's narrative description of the event | Original text; `summary_clean` is used for NLP |
+| `motive` | Stated or inferred motive (44% filled) | Event property (display) |
+| `scite1`, `scite2`, `scite3` | Source citations (news articles); 100%, 70% and 44% filled | `Source` nodes (`REPORTED_BY`), the evidence trail |
+| `dbsource` | The data source that supplied the record | Property on the `REPORTED_BY` edge |
 
 ## Columns added by cleaning (8)
 
@@ -50,6 +50,11 @@
 | `dup_group` | ID shared by events with identical `summary_clean`. Mostly same-day twin records, plus two groups of separate incidents with templated wording. Use it to keep these events together when splitting data for models |
 | `related_ids` | `related` parsed into a list of integer event IDs, without the event's own ID |
 | `related_in_scope` | The subset of `related_ids` that exists in this dataset |
+
+## Derived later (not stored in this file)
+
+- **Area and Locality:** assigned to each event during the graph build by `src/areas.py`, from `location`, `city_raw` and the summary. 74% of events (1,239 of 1,664) receive an Area, and 225 of them also receive a more specific Locality. See `docs/area_evaluation.md`.
+- **Graph links between events:** built by `src/build_graph.py` (see `docs/graph_schema.md`).
 
 ## Cleaning rules
 
@@ -69,7 +74,11 @@
 - **Coordinates carry no area information:** 1,627 of 1,664 events share one city-centre point, so latitude, longitude and specificity were dropped. Neighbourhoods have to be extracted from `location` and the summary text.
 - **Short summaries:** they average about 300 characters (roughly 50 words).
 - **Labels such as "Unknown" are not evidence of a shared attribute.** They never create links between events.
-- **Skewed over time:** about 700 events fall in 2013 and 2014 (the Karachi surge), and 1993 is absent from GTD entirely (the records for that year were lost).
+- **Skewed over time:** about 700 of the 1,664 events fall in 2013 and 2014 (the Karachi surge).
+- **Event IDs are not dates:** the date prefix of an `eventid` can differ from the date fields (for example `201402100070` is dated 2014-02-08). Use the `date` column for ordering.
+- **Only some events get an Area:** 26% name no recurring place (one-off landmarks, or no place at all), so area-based links reach about three quarters of events.
+- **Only the primary attack, weapon and target are kept:** the second and third versions in GTD are under 6% filled.
+- **Some group names are broad descriptors,** for example "Sunni Muslim extremists" or "Baloch Nationalists". They are kept as groups, so links through them are weaker than links through a named organisation.
 
 ## Rebuilding the dataset
 
@@ -78,3 +87,5 @@ python src/convert_to_parquet.py   # raw Excel to Parquet
 python src/make_scope.py           # Karachi, 2000 to 2020
 python src/clean_data.py           # cleaning and added columns
 ```
+
+The graph is built from this file; see the README for the graph build steps.
