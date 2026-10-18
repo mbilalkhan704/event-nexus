@@ -10,6 +10,7 @@ STATEMENTS = [
     "CREATE CONSTRAINT source_citation IF NOT EXISTS FOR (n:Source) REQUIRE n.citation IS UNIQUE",
     "CREATE CONSTRAINT area_name IF NOT EXISTS FOR (n:Area) REQUIRE n.name IS UNIQUE",
     "CREATE INDEX event_date IF NOT EXISTS FOR (n:Event) ON (n.date)",
+    "CREATE CONSTRAINT locality_name IF NOT EXISTS FOR (n:Locality) REQUIRE n.name IS UNIQUE",
 ]
 
 driver = get_driver()

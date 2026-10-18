@@ -3,6 +3,7 @@ import pandas as pd
 from config import DATA_CLEAN, GRAPH_RULES, ORG_ALIASES, ORG_PLACEHOLDERS, get_driver, run
 from itertools import combinations
 from collections import defaultdict
+from areas import build_gazetteer, extract_area_detail
 
 BATCH = 500
 
@@ -237,7 +238,95 @@ def load_links(driver, rel, rows):
         run(driver, query, rows=rows[i:i + BATCH])
     print(f"{rel}: {len(rows)} links sent")
 
-    
+
+def area_assignments(df):
+    """Area, locality and method for every event that has one."""
+    gazetteer = build_gazetteer(df)
+    out = {}
+    for r in df.to_dict("records"):
+        area, locality, method = extract_area_detail(
+            r["location"], r["summary_clean"], r["city_raw"], gazetteer)
+        if area:
+            out[int(r["eventid"])] = (area, locality, method)
+    return out
+
+
+def load_areas(driver, assignments):
+    in_rows = [{"eventid": e, "value": a, "props": {"method": m}}
+               for e, (a, loc, m) in assignments.items()]
+    at_rows = [{"eventid": e, "value": loc, "props": {}}
+               for e, (a, loc, m) in assignments.items() if loc]
+    link(driver, "Area", "name", "OCCURRED_IN", in_rows)
+    link(driver, "Locality", "name", "OCCURRED_AT", at_rows)
+
+    parts = sorted({(loc, a) for (a, loc, m) in assignments.values() if loc})
+    run(driver,
+        "UNWIND $rows AS row "
+        "MATCH (l:Locality {name: row.child}) MATCH (a:Area {name: row.parent}) "
+        "MERGE (l)-[:PART_OF]->(a)",
+        rows=[{"child": c, "parent": p} for c, p in parts])
+    print(f"PART_OF: {len(parts)} links sent")
+
+
+def area_link_rows(df, assignments):
+    info = {}
+    for r in df.to_dict("records"):
+        eid = int(r["eventid"])
+        if eid in assignments:
+            area, locality, _ = assignments[eid]
+            info[eid] = {
+                "date": r["date"], "area": area, "locality": locality,
+                "mo": (usable(r["attacktype1_txt"]), usable(r["weaptype1_txt"]),
+                       usable(r["targtype1_txt"])),
+            }
+
+    def same_locality(a, b):
+        return info[a]["locality"] is not None and info[a]["locality"] == info[b]["locality"]
+
+    # SAME_MO_LOCAL: same area and same attack, weapon and target type, close in time
+    window = GRAPH_RULES["same_mo_window_days"]
+    groups = defaultdict(list)
+    for eid, d in info.items():
+        if all(d["mo"]):
+            groups[(d["area"],) + d["mo"]].append(eid)
+    mo_rows = []
+    for (area, attack, weapon, target), ids in groups.items():
+        for a, b in combinations(ids, 2):
+            gap = abs((info[a]["date"] - info[b]["date"]).days)
+            if gap <= window:
+                first, second = sorted((a, b), key=lambda e: (info[e]["date"], e))
+                shared = same_locality(a, b)
+                evidence = [f"area: {area}", f"attack: {attack}", f"weapon: {weapon}",
+                            f"target: {target}", f"gap_days: {gap}"]
+                if shared:
+                    evidence.append(f"locality: {info[a]['locality']}")
+                mo_rows.append({"a": first, "b": second, "props": {
+                    "rule": "same_mo_local", "gap_days": gap,
+                    "strength": round(1 - gap / (window + 1), 2),
+                    "same_locality": shared, "evidence": evidence}})
+
+    # FOLLOWED_BY: the next event in the same area, if it comes soon enough
+    follow_window = GRAPH_RULES["followed_by_window_days"]
+    by_area = defaultdict(list)
+    for eid, d in info.items():
+        by_area[d["area"]].append(eid)
+    follow_rows = []
+    for area, ids in by_area.items():
+        ids.sort(key=lambda e: (info[e]["date"], e))
+        for a, b in zip(ids, ids[1:]):
+            gap = (info[b]["date"] - info[a]["date"]).days
+            if gap <= follow_window:
+                shared = same_locality(a, b)
+                evidence = [f"area: {area}", f"gap_days: {gap}"]
+                if shared:
+                    evidence.append(f"locality: {info[a]['locality']}")
+                follow_rows.append({"a": a, "b": b, "props": {
+                    "rule": "followed_by", "gap_days": gap,
+                    "strength": round(1 - gap / (follow_window + 1), 2),
+                    "same_locality": shared, "evidence": evidence}})
+    return mo_rows, follow_rows
+
+
 if __name__ == "__main__":
     driver = get_driver()
     df = pd.read_parquet(DATA_CLEAN)
@@ -247,9 +336,18 @@ if __name__ == "__main__":
 
     load_events(driver, df)
     load_attributes(driver, df)
+
     actor_rows, source_rows, related_rows = derived_rows(df)
     load_links(driver, "SAME_ACTOR_NEARBY", actor_rows)
     load_links(driver, "SAME_SOURCE", source_rows)
     load_links(driver, "GTD_RELATED", related_rows)
+
+    assignments = area_assignments(df)
+    print(f"Events with an area: {len(assignments)} of {len(df)}")
+    load_areas(driver, assignments)
+    mo_rows, follow_rows = area_link_rows(df, assignments)
+    load_links(driver, "SAME_MO_LOCAL", mo_rows)
+    load_links(driver, "FOLLOWED_BY", follow_rows)
+
     summary(driver)
     driver.close()
