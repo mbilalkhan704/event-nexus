@@ -21,7 +21,7 @@ Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_
 
 | Node | Key | Source | Phase |
 |---|---|---|---|
-| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `city_raw`, `nkill`, `nwound`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`. Readable text copies for display: `gname`, `attack_type`, `weapon_type`, `weapon_subtype`, `weapon_detail`, `target_type`, `target_subtype`, `target_org`, `target_desc`, `motive`. Later: `embedding`, `cluster` | 3 |
+| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `city_raw`, `nkill`, `nwound`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`. Readable text copies for display: `gname`, `attack_type`, `weapon_type`, `weapon_subtype`, `weapon_detail`, `target_type`, `target_subtype`, `target_org`, `target_desc`, `motive`. Phase 5: `embedding` (384 dimensions) and `cluster` (integer, unset when the event is noise) | 3 (embedding and cluster in 5) |
 | `Group` | `name` | `gname`, only when `actor_known` | 3 |
 | `AttackType` | `name` | `attacktype1_txt` | 3 |
 | `WeaponType` | `name` | `weaptype1_txt` (the subtype stays a property on the edge) | 3 |
@@ -56,7 +56,7 @@ Each link stores `rule`, `strength` and `evidence` (which attributes matched). S
 | `SAME_SOURCE` | Share a citation shared by 2 to 10 events. Strength is the number of shared citations. Sizing: 411 citations shared by 2+ events, covering 664 events (40%); the largest is shared by 7 | 3 |
 | `SAME_MO_LOCAL` | Same Area, same attack type, weapon type and target type (Unknown never counts), within 30 days. Properties: `gap_days`, `same_locality`. 184 links | 4 |
 | `FOLLOWED_BY` | The next event in the same Area, if it comes within 7 days. Directed earlier to later, with `gap_days` and `same_locality`. Forms chains, not all pairs. 280 links; the longest chain has 13 links (20 January to 24 February 2014) | 4 |
-| `SIMILAR_TO` | Top 5 embedding neighbours per event, with a similarity score and a cut-off set in Phase 5 | 5 |
+| `SIMILAR_TO` | Top 5 embedding neighbours by raw cosine, kept when the score is at least 0.85 and the pair is mutual (each event is in the other's top 5). `dup_group` pairs excluded. Stored once, earlier to later. Properties: `strength` (cosine), `gap_days`, `same_area` (only when both events share an Area). 928 links covering 784 events, maximum 5 per event | 5 |
 | `GTD_RELATED` | GTD's own related pairs (118 in-scope pairs, 111 with different text). **Evaluation only** | 3 |
 
 ## Design principles
@@ -67,6 +67,7 @@ Each link stores `rule`, `strength` and `evidence` (which attributes matched). S
 4. **`multiple` is a property only,** not a link rule or model feature.
 5. **Every derived link can explain itself** through its `rule`, `strength` and `evidence`.
 6. **Two levels of place.** Linking uses the Area; the Locality keeps the detail.
+7. **Clusters are a property, not a link.** `Event.cluster` is left unset for noise, and cluster numbers are not stable across parameter changes, so queries never hard-code them.
 
 ## Rule parameters
 
@@ -79,6 +80,14 @@ GRAPH_RULES = {
     "followed_by_window_days": 7,
     "source_max_events": 10,
     "similar_top_k": 5,
+    "similar_min_score": 0.85,
+}
+
+CLUSTER_RULES = {
+    "umap_neighbors": 15,
+    "cluster_dims": 5,
+    "min_cluster_size": 10,
+    "random_state": 42,
 }
 ```
 
@@ -88,7 +97,7 @@ GRAPH_RULES = {
 |---|---|---|
 | Uniqueness | `Event.eventid`, `Group.name`, `AttackType.name`, `WeaponType.name`, `TargetType.name`, `TargetOrg.name`, `Source.citation`, `Area.name`, `Locality.name` | 3 (Area and Locality in 4) |
 | Range index | `Event.date` | 3 |
-| Vector index | `Event.embedding` (384 dimensions, cosine) | 5 |
+| Vector index | `Event.embedding` (index name event_embedding) (384 dimensions, cosine) | 5 |
 | Full-text index | `Event.summary_clean` | 8 |
 
 ## Example queries
@@ -126,11 +135,20 @@ WHERE NOT ()-[:FOLLOWED_BY]->(a) AND NOT (b)-[:FOLLOWED_BY]->()
 RETURN a.eventid, b.eventid, length(p) AS links ORDER BY links DESC LIMIT 5
 ```
 
+Similar events close in place and time? (run in Phase 5)
+
+```cypher
+MATCH (a:Event)-[r:SIMILAR_TO]-(b:Event)
+WHERE r.same_area AND r.gap_days <= 30 AND a.eventid < b.eventid
+RETURN a.eventid, b.eventid, r.strength, r.gap_days
+ORDER BY r.strength DESC LIMIT 5
+```
+
 ## Naming conventions
 
 Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and properties are snake_case.
 
-## Loaded graph (Phases 3 and 4)
+## Loaded graph (Phases 3 to 5)
 
 | Nodes | Count | Relationships | Count |
 |---|---|---|---|
@@ -140,13 +158,14 @@ Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and propert
 | Area | 95 | USED_WEAPON | 1,625 |
 | Locality | 43 | OCCURRED_IN | 1,239 |
 | Group | 39 | TARGETED_ORG | 1,194 |
-| TargetType | 19 | SAME_ACTOR_NEARBY | 632 |
-| AttackType | 7 | SAME_SOURCE | 607 |
-| WeaponType | 7 | ATTRIBUTED_TO | 326 |
+| TargetType | 19 | SIMILAR_TO | 928 |
+| AttackType | 7 | SAME_ACTOR_NEARBY | 632 |
+| WeaponType | 7 | SAME_SOURCE | 607 |
+| | | ATTRIBUTED_TO | 326 |
 | | | FOLLOWED_BY | 280 |
 | | | OCCURRED_AT | 225 |
 | | | SAME_MO_LOCAL | 184 |
 | | | GTD_RELATED | 118 |
 | | | PART_OF | 43 |
 
-`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Rebuild everything with `python src/build_graph.py --reset`, and verify with `python src/check_graph.py` (16 checks).
+`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Each Event also carries a 384-dimension `embedding` property, indexed by the vector index `event_embedding`. 928 SIMILAR_TO links connect 784 events (47%), with a maximum of 5 links per event. 1,324 events (80%) have a `cluster`; the other 340 are noise and have none (31 clusters). Rebuild with `python src/build_graph.py --reset`, then `python src/embed_graph.py`, `python src/similar_links.py` and `python src/cluster_events.py`, because the reset also removes the embeddings, SIMILAR_TO and clusters. `python src/embed_events.py` creates the cached vectors and only needs rerunning if the data or the embedding model changes. Verify with `python src/check_graph.py` (28 checks).

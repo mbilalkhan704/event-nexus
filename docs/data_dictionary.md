@@ -47,7 +47,7 @@
 | `date_approx` | True if the exact day or month was unknown, or the summary says "(Default Date)" |
 | `actor_known` | False when `gname` is "Unknown" or "Gunmen" (generic labels, not real groups) |
 | `summary_clean` | `summary` without the leading date prefix, used for NLP |
-| `dup_group` | ID shared by events with identical `summary_clean`. Mostly same-day twin records, plus two groups of separate incidents with templated wording. Use it to keep these events together when splitting data for models |
+| `dup_group` | ID shared by events with identical `summary_clean`. Mostly same-day twin records, plus two groups of separate incidents with templated wording. Use it to keep these events together when splitting data for models. Nine groups in total, each of 2 events, all with identical text. They are excluded from SIMILAR_TO. |
 | `related_ids` | `related` parsed into a list of integer event IDs, without the event's own ID |
 | `related_in_scope` | The subset of `related_ids` that exists in this dataset |
 
@@ -55,6 +55,7 @@
 
 - **Area and Locality:** assigned to each event during the graph build by `src/areas.py`, from `location`, `city_raw` and the summary. 74% of events (1,239 of 1,664) receive an Area, and 225 of them also receive a more specific Locality. See `docs/area_evaluation.md`.
 - **Graph links between events:** built by `src/build_graph.py` (see `docs/graph_schema.md`).
+- **Embeddings and clusters:** `data/processed/event_embeddings.npz` holds the event IDs and a 384-dimension vector per summary (`src/embed_events.py`). The vectors, a `cluster` number (unset for noise) and the similarity links are written to the graph. The 2-D map coordinates are in `data/processed/event_map.json`. See `docs/graph_schema.md`.
 
 ## Cleaning rules
 
