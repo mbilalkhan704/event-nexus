@@ -13,6 +13,14 @@ GRAPH_RULES = {
     "followed_by_window_days": 7,
     "source_max_events": 10,
     "similar_top_k": 5,
+    "similar_min_score": 0.85,
+}
+
+CLUSTER_RULES = {
+    "umap_neighbors": 15,
+    "cluster_dims": 5,
+    "min_cluster_size": 10,
+    "random_state": 42,
 }
 
 ORG_PLACEHOLDERS = {"not applicable", "civilians", "civilian"}
