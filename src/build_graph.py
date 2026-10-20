@@ -39,6 +39,8 @@ def event_rows(df):
             "city_raw": clean(r["city_raw"]),
             "nkill": to_int(r["nkill"]),
             "nwound": to_int(r["nwound"]),
+            "nkillter": to_int(r["nkillter"]),
+            "nwoundte": to_int(r["nwoundte"]),
             "success": to_bool(r["success"]),
             "suicide": to_bool(r["suicide"]),
             "multiple": to_bool(r["multiple"]),

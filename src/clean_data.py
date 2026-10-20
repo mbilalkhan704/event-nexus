@@ -1,6 +1,6 @@
 """
 Cleaning rules (see docs/data_dictionary.md for the reasoning):
- 1. Keep only the 30 chosen columns
+ 1. Keep only the 32 chosen columns
  2. Keep original city as city_raw; set city to "Karachi"
  3. Build a single date; day or month 0 becomes 1, flagged by date_approx
  4. actor_known is False for the generic labels "Unknown" and "Gunmen"
@@ -8,7 +8,7 @@ Cleaning rules (see docs/data_dictionary.md for the reasoning):
  6. summary_clean = summary without the leading MM/DD/YYYY: prefix
  7. Keep every event; dup_group marks identical summaries (leakage guard)
  8. Parse related into related_ids and related_in_scope
- 9. Missing nkill / nwound stay missing, not zero
+ 9. Missing nkill / nwound / nkillter / nwoundte stay missing, not zero
 """
 import re
 import pandas as pd
@@ -19,7 +19,7 @@ KEEP = [
     "gname", "guncertain1", "claimed",
     "attacktype1_txt", "weaptype1_txt", "weapsubtype1_txt", "weapdetail",
     "targtype1_txt", "targsubtype1_txt", "corp1", "target1",
-    "nkill", "nwound", "success", "suicide",
+    "nkill", "nkillter", "nwound", "nwoundte", "success", "suicide",
     "multiple", "related", "doubtterr",
     "summary", "motive",
     "scite1", "scite2", "scite3", "dbsource",
@@ -45,7 +45,7 @@ df["date"] = pd.to_datetime(dict(
 df["actor_known"] = ~df["gname"].isin(GENERIC_GROUPS)
 
 # 5. Unknown codes become missing
-for col in ["claimed", "nkill", "nwound"]:
+for col in ["claimed", "nkill", "nwound", "nkillter", "nwoundte"]:
     df[col] = df[col].where(df[col] >= 0)
 
 # 6. Text
@@ -79,11 +79,12 @@ print("Cities:", df["city"].unique().tolist())
 print("Date range:", df["date"].min().date(), "to", df["date"].max().date())
 print("Approximate dates:", int(df["date_approx"].sum()))
 print("Actor known:", round(float(df["actor_known"].mean()), 2))
-print("Missing claimed / nkill / nwound:",
-      int(df["claimed"].isna().sum()), int(df["nkill"].isna().sum()), int(df["nwound"].isna().sum()))
+print("Missing claimed / nkill / nwound / nkillter / nwoundte:",
+      *[int(df[c].isna().sum()) for c in ["claimed", "nkill", "nwound", "nkillter", "nwoundte"]])
 print("Events with a date prefix left in summary_clean:",
       int(df["summary_clean"].str.match(r"^\d{2}/\d{2}/\d{4}").sum()))
 print("Duplicate-summary groups:", int((df["dup_group"].value_counts() > 1).sum()))
 print("Events with related links / in scope:",
       int(df["related_ids"].apply(len).gt(0).sum()),
       int(df["related_in_scope"].apply(len).gt(0).sum()))
+
