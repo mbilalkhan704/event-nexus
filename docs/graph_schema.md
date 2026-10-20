@@ -21,7 +21,7 @@ Event -[SAME_ACTOR_NEARBY | SAME_SOURCE | SAME_MO_LOCAL | FOLLOWED_BY | SIMILAR_
 
 | Node | Key | Source | Phase |
 |---|---|---|---|
-| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `city_raw`, `nkill`, `nwound`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`. Readable text copies for display: `gname`, `attack_type`, `weapon_type`, `weapon_subtype`, `weapon_detail`, `target_type`, `target_subtype`, `target_org`, `target_desc`, `motive`. Phase 5: `embedding` (384 dimensions) and `cluster` (integer, unset when the event is noise) | 3 (embedding and cluster in 5) |
+| `Event` | `eventid` | Cleaned table. Properties: `date`, `date_approx`, `summary_clean`, `location`, `city_raw`, `nkill`, `nkillter`, `nwound`, `nwoundte`, `success`, `suicide`, `multiple`, `doubtterr`, `actor_known`, `dup_group`. Readable text copies for display: `gname`, `attack_type`, `weapon_type`, `weapon_subtype`, `weapon_detail`, `target_type`, `target_subtype`, `target_org`, `target_desc`, `motive`. Phase 5: `embedding` (384 dimensions) and `cluster` (integer, unset when the event is noise) | 3 (embedding and cluster in 5) |
 | `Group` | `name` | `gname`, only when `actor_known` | 3 |
 | `AttackType` | `name` | `attacktype1_txt` | 3 |
 | `WeaponType` | `name` | `weaptype1_txt` (the subtype stays a property on the edge) | 3 |
@@ -144,6 +144,8 @@ RETURN a.eventid, b.eventid, r.strength, r.gap_days
 ORDER BY r.strength DESC LIMIT 5
 ```
 
+The full set of queries for the 15 questions is in docs/query_library.md.
+
 ## Naming conventions
 
 Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and properties are snake_case.
@@ -168,4 +170,4 @@ Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and propert
 | | | GTD_RELATED | 118 |
 | | | PART_OF | 43 |
 
-`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Each Event also carries a 384-dimension `embedding` property, indexed by the vector index `event_embedding`. 928 SIMILAR_TO links connect 784 events (47%), with a maximum of 5 links per event. 1,324 events (80%) have a `cluster`; the other 340 are noise and have none (31 clusters). Rebuild with `python src/build_graph.py --reset`, then `python src/embed_graph.py`, `python src/similar_links.py` and `python src/cluster_events.py`, because the reset also removes the embeddings, SIMILAR_TO and clusters. `python src/embed_events.py` creates the cached vectors and only needs rerunning if the data or the embedding model changes. Verify with `python src/check_graph.py` (28 checks).
+`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Each Event also carries a 384-dimension `embedding` property, indexed by the vector index `event_embedding`. 928 SIMILAR_TO links connect 784 events (47%), with a maximum of 5 links per event. 1,324 events (80%) have a `cluster`; the other 340 are noise and have none (31 clusters). Rebuild with `python src/build_graph.py --reset`, then `python src/embed_graph.py`, `python src/similar_links.py` and `python src/cluster_events.py`, because the reset also removes the embeddings, SIMILAR_TO and clusters. `python src/embed_events.py` creates the cached vectors and only needs rerunning if the data or the embedding model changes. Verify with `python src/check_graph.py` (32 checks).

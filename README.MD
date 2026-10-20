@@ -28,8 +28,8 @@ Design goal: after a one-time download of the models, the whole application runs
 
 ## Current state
 
-- 1,664 Karachi incidents (2000 to 2020) from GTD, cleaned to 30 columns plus derived fields.
-- A Neo4j graph with 9 node types and 15 relationship types, rebuilt from scratch by one command and verified by 28 automated checks.
+- 1,664 Karachi incidents (2000 to 2020) from GTD, cleaned to 32 columns plus derived fields.
+- A Neo4j graph with 9 node types and 15 relationship types, rebuilt from scratch by one command and verified by 32 automated checks.
 - Cross-event links that each carry a rule, a strength and evidence: 632 same-actor-nearby, 607 same-source, 184 same-method-and-place, 280 followed-by (chains of events in the same area within a week), and 928 similar-to (mutual nearest neighbours by embedding, cosine at least 0.85).
 - Place extraction: 74% of events get an Area and 225 also get a specific Locality. On 30 held-out hand-labelled events, an earlier version of the extractor reached precision 0.95 and recall 0.77 (see `docs/area_evaluation.md`).
 - Embeddings: all 1,664 summaries are embedded (384 dimensions) and indexed with a Neo4j vector index. 31 clusters group 80% of events; the rest are noise and get no cluster.
@@ -53,7 +53,7 @@ EventNexus/
 ├── data/
 │   ├── raw/                 # source data (not tracked by git)
 │   └── processed/           # converted and cleaned datasets (not tracked by git)
-├── docs/                    # data dictionary, graph schema, area extraction evaluation
+├── docs/                    # data dictionary, graph schema, query library, area extraction evaluation
 ├── models/                  # downloaded and trained models (not tracked by git)
 ├── notebooks/               # exploration and evaluation
 ├── src/                     # pipeline code, graph build, place extraction, setup scripts
@@ -176,7 +176,7 @@ python src/build_graph.py --reset   # build the graph (safe to re-run)
 python src/embed_graph.py           # embeddings and vector index onto the events
 python src/similar_links.py         # SIMILAR_TO links
 python src/cluster_events.py        # clusters and the map file
-python src/check_graph.py           # 28 checks on the finished graph
+python src/check_graph.py           # 32 checks on the finished graph
 ```
 
 The graph build itself does not need the downloaded models; the embedding step does. `build_graph.py --reset` also removes the embeddings, similarity links and clusters, so run the three steps after it again. `embed_events.py` only needs rerunning if the data or the embedding model changes. To reproduce the place-extraction comparison, run `python src/areas_gliner.py` and the evaluation notebooks; the hand-labelled files are not included because they contain GTD text.

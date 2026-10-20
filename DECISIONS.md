@@ -16,7 +16,7 @@
 | PyTorch | Installed per machine, not in requirements.txt | CPU here, CUDA on the GPU machine |
 | Data privacy | Raw and processed data are not tracked by git | GTD terms of use; file size |
 | Area from text | Neighbourhoods are extracted from location and summary text, not coordinates | 1,627 of 1,664 events share one city-centre coordinate |
-| Columns kept | 30 of 135 (identity, place, actor, method, target, outcome, cross-event hints, text, evidence) | Chosen for linking events, describing them, or evidence; the rest are mostly empty or redundant |
+| Columns kept | 32 of 135 (identity, place, actor, method, target, outcome including perpetrator casualties, cross-event hints, text, evidence) | Chosen for linking events, describing them, or evidence; `nkillter` and `nwoundte` were added so severity can exclude attackers; the rest are mostly empty or redundant |
 | Unknown is not a link | Values labelled "Unknown" (and generic groups) never create shared-attribute links in the graph | Two unknowns don't mean the same thing |
 | Graph questions | 15 questions in 5 tiers (lookup, cross-event patterns, multi-hop chains, provenance, similarity); 12 of them are cross-event | The schema is built backwards from the questions, so every structure earns its place |
 | Graph nodes | Event, Group, AttackType, WeaponType, TargetType, TargetOrg, Source, Area and Locality (the last two come from place extraction in Phase 4) | These are the things events connect through |
@@ -56,3 +56,10 @@
 | Clusters overlap the GTD fields | Most clusters are 94 to 100% a single weapon type. They are kept as a theme grouping, mainly for the clusters that split by target or time window (for example police shootings, religious figures, hostage-taking) | Reading the clusters showed the broad split repeats the weapon field, so they are not presented as findings about campaigns |
 | Map data lives outside the graph | 2-D coordinates and cluster ids are saved in `data/processed/event_map.json` | Keeps display data out of the graph; the app serves the file directly |
 | Cluster numbers are unstable | Cluster ids change if parameters or library versions change; no query may hard-code one. Naming clusters is left to Phase 8 | Names should be chosen after seeing how the QA layer uses them |
+| Severity | Victims killed (`nkill` − `nkillter`), then victims wounded (`nwound` − `nwoundte`). Unknown is not zero: events without `nkill` are skipped, and a missing perpetrator count means the total is used and flagged | GTD totals include attackers. In 2016-2020 the third event by raw `nkill` had only attackers killed |
+| Vector search syntax | `db.index.vector.queryNodes` is used in `embed_graph.py` and in queries Q14 and Q15 of the query library. Neo4j deprecated it in 2026.04 in favour of the `SEARCH` clause. It still works on 2026.09; migration is planned after the core app works | A deprecation warning appeared on the rebuild |
+| Event ids are internal | Users never type or see event ids. Queries return ids in underscore columns, which the app removes. Events are reached by description, previous results or graph clicks | Ids mean nothing to users and expose the database |
+| Relative dates | "Last N years" counts back from the end of the data (2020-12-22), and the answer says so. Requests wholly outside 2000-2020 are refused with a reason | Counting from today would return nothing |
+| Link windows | `SAME_ACTOR_NEARBY` and `SAME_MO_LOCAL` answer up to 30 days, `FOLLOWED_BY` up to 7. Longer windows use computed queries (Q3b, Q4b) | Stops a longer window being silently cut to 30 days |
+| Coordinated attacks | Q5 returns the gap, same area, shared sources and GTD's `multiple` flag for display, and defines no "coordinated" rule | There is no independent rule, and `multiple` stays display-only |
+| Attribution labels | claimed, suspected, and "attributed, not flagged suspected" | GTD has no "confirmed" flag |

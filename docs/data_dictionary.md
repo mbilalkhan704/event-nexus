@@ -5,9 +5,9 @@
 - **Source:** Global Terrorism Database (GTD), maintained by START at the University of Maryland. The raw data is not included in this repository.
 - **Scope:** incidents in Karachi, 2000 to 2020 (1,664 events). Karachi means a city name containing "karachi" (any spelling), or an event in Sindh whose coordinates fall inside Karachi's bounding box (latitude 24.7 to 25.2, longitude 66.8 to 67.4). This also captures events filed under district names such as North Nazimabad, Gadap and Korangi.
 - **Why 2000 onward:** incident summaries exist only from 2000. Earlier events have almost no text, and most have an unknown perpetrator.
-- **File:** `data/processed/karachi_events_clean.parquet` (1,664 rows, 38 columns).
+- **File:** `data/processed/karachi_events_clean.parquet` (1,664 rows, 40 columns).
 
-## Columns kept from GTD (30)
+## Columns kept from GTD (32)
 
 | Column | Meaning | Role in the graph |
 |---|---|---|
@@ -26,8 +26,10 @@
 | `targsubtype1_txt` | Target subcategory | Property `subtype` on the `TARGETED` edge |
 | `corp1` | Organisation targeted | `TargetOrg` node (placeholders ignored, spelling variants merged) |
 | `target1` | Description of the specific target or victim | Event property `target_desc` (display) |
-| `nkill` | Confirmed fatalities (GTD counts victims and attackers) | Event property |
+| `nkill` | Total confirmed fatalities, victims and perpetrators together | Event property |
 | `nwound` | Confirmed non-fatal injuries | Event property |
+| `nkillter` | Perpetrators killed, included in `nkill`. Missing for 5 events | Event property; severity uses `nkill` − `nkillter` |
+| `nwoundte` | Perpetrators wounded, included in `nwound`. Missing for 7 events | Event property; severity uses `nwound` − `nwoundte` |
 | `success` | Whether the attack achieved its immediate objective, as GTD defines it per attack type | Event property |
 | `suicide` | 1 if a suicide attack | Event property |
 | `multiple` | 1 if the event is part of a multiple (coordinated) incident | Event property only; not a link rule or model feature, because it reflects GTD's own relatedness judgement |
@@ -47,7 +49,7 @@
 | `date_approx` | True if the exact day or month was unknown, or the summary says "(Default Date)" |
 | `actor_known` | False when `gname` is "Unknown" or "Gunmen" (generic labels, not real groups) |
 | `summary_clean` | `summary` without the leading date prefix, used for NLP |
-| `dup_group` | ID shared by events with identical `summary_clean`. Mostly same-day twin records, plus two groups of separate incidents with templated wording. Use it to keep these events together when splitting data for models. Nine groups in total, each of 2 events, all with identical text. They are excluded from SIMILAR_TO. |
+| `dup_group` | ID shared by events with identical `summary_clean`. Every event has one; it is unique to the event unless the text is shared. Mostly same-day twin records, plus two groups of separate incidents with templated wording. Use it to keep these events together when splitting data for models. Nine groups in total, each of 2 events, all with identical text. They are excluded from SIMILAR_TO. |
 | `related_ids` | `related` parsed into a list of integer event IDs, without the event's own ID |
 | `related_in_scope` | The subset of `related_ids` that exists in this dataset |
 
@@ -59,15 +61,15 @@
 
 ## Cleaning rules
 
-1. Keep only the 30 chosen columns. The rest are mostly empty or redundant.
+1. Keep only the 32 chosen columns. The rest are mostly empty or redundant.
 2. Keep the original city as `city_raw`, then set `city` to "Karachi". This fixes spelling variants, and `city_raw` keeps district names as hints for neighbourhood extraction.
 3. Build `date`. A zero month or day becomes 1 and sets `date_approx`.
 4. Add `actor_known`. "Unknown" and "Gunmen" are not real groups, and the original `gname` is kept.
-5. Turn GTD's negative unknown-codes (for example -9 in `claimed`) into missing values.
+5. Turn GTD's negative unknown-codes (for example -9 in `claimed`) into missing values. This applies to `claimed`, `nkill`, `nwound`, `nkillter` and `nwoundte`.
 6. Add `summary_clean` by stripping the date prefix, including the "(Default Date)" variant.
 7. Keep every event. Identical summaries are marked with `dup_group` and not removed, since they are separate GTD records.
 8. Parse `related` into `related_ids` and `related_in_scope`.
-9. Leave missing `nkill` and `nwound` missing. Unknown is not the same as zero.
+9. Leave missing `nkill`, `nwound`, `nkillter` and `nwoundte` missing. Unknown is not the same as zero.
 
 ## Known limits of the data
 
@@ -80,6 +82,7 @@
 - **Only some events get an Area:** 26% name no recurring place (one-off landmarks, or no place at all), so area-based links reach about three quarters of events.
 - **Only the primary attack, weapon and target are kept:** the second and third versions in GTD are under 6% filled.
 - **Some group names are broad descriptors,** for example "Sunni Muslim extremists" or "Baloch Nationalists". They are kept as groups, so links through them are weaker than links through a named organisation.
+- **Casualty counts include perpetrators:** `nkill` and `nwound` count attackers as well as victims, so rankings use `nkill` − `nkillter` and `nwound` − `nwoundte`. In 100 events at least one attacker was killed. Where a perpetrator count is missing (5 and 7 events), it is treated as unknown and the total is used.
 
 ## Rebuilding the dataset
 
