@@ -147,5 +147,5 @@ RULES
    With too few events in context, reply REFUSE asking which event or events.
    Output is one of CYPHER:, REFUSE: or FAST:.
 12. Variable-length patterns are allowed only on FOLLOWED_BY, directed, for
-   chains of events (upper bound at most 6). Never write variable-length
-   patterns over the other link types.
+  chains of events (any length: chains are linear). Never write variable-length
+  patterns over the other link types.
