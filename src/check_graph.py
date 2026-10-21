@@ -2,6 +2,13 @@ import json
 import pandas as pd
 from config import DATA_CLEAN, GRAPH_RULES, get_driver, run
 from build_graph import area_assignments
+from components import COUNT_QUERY, OUT as COMPONENTS_FILE
+
+try:
+    with open(COMPONENTS_FILE) as f:
+        components = json.load(f)
+except FileNotFoundError:
+    components = None
 
 df = pd.read_parquet(DATA_CLEAN)
 driver = get_driver()
@@ -84,6 +91,9 @@ checks = [
      count("MATCH (e:Event) WHERE e.cluster IS NOT NULL RETURN count(e) AS c"), map_clustered),
     ("Map file covers every event",
      len(event_map), len(df)),
+    ("Component file matches the graph (events, links, coverage)",
+    (components["events"], components["edges"], len(components["component_of"])) if components else "file missing",
+     (len(df), count(COUNT_QUERY), len(df))),
 ]
 
 failed = 0
@@ -94,3 +104,4 @@ for name, got, want in checks:
 
 driver.close()
 print("\nAll checks passed" if not failed else f"\n{failed} check(s) failed")
+

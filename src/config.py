@@ -33,6 +33,9 @@ ORG_ALIASES = {
     "Pakistan Police": "Pakistani Police",
 }
 
+VALIDATOR_RULES = {"max_limit": 100, "list_limit": 50, "timeout_s": 10, "max_path_hops": 6}
+FAST_DEFAULTS = {"q14_k": 5, "q15_k": 10, "q15_min_cosine": 0.85, "q15_limit": 50}
+
 
 def get_driver():
     return GraphDatabase.driver(
