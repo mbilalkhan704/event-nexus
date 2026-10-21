@@ -20,7 +20,7 @@ Every answer points back to the specific events it came from, so results can be 
 2. **Graph:** events, actors, targets, weapons, and areas are loaded into Neo4j, with links between events that share attributes.
 3. **Place extraction:** a rule-based extractor with a gazetteer assigns each event an Area (town level) and, when the text is more specific, a Locality (for example Gulshan-e-Maymar in Gadap). It was evaluated against GLiNER and a hybrid on hand-labelled events.
 4. **Embeddings and clustering:** summaries are embedded (all-MiniLM-L6-v2) and stored on the events. Events link to their mutual nearest neighbours when they are very similar, and are grouped into themes with UMAP and HDBSCAN. Embeddings capture what happened and to whom, not which campaign an event belonged to, so each similarity link also carries the gap in days and whether the events share an Area.
-5. **Trained models:** a fine-tuned text classifier and an event-similarity model.
+5. **Trained models:** a small language model fine-tuned (QLoRA) to turn questions into graph queries or a reasoned refusal, compared with an untrained model and a prompted hosted model.
 6. **Question answering:** a language model turns questions into graph queries and summarises the results with event citations. A hosted model is used during development, with a local model (via Ollama) as the offline fallback.
 7. **Interface:** a FastAPI backend with a browser UI showing the answer, the evidence trail, and the graph.
 
@@ -29,7 +29,7 @@ Design goal: after a one-time download of the models, the whole application runs
 ## Current state
 
 - 1,664 Karachi incidents (2000 to 2020) from GTD, cleaned to 32 columns plus derived fields.
-- A Neo4j graph with 9 node types and 15 relationship types, rebuilt from scratch by one command and verified by 32 automated checks.
+- A Neo4j graph with 9 node types and 15 relationship types, rebuilt from scratch by one command and verified by 33 automated checks.
 - Cross-event links that each carry a rule, a strength and evidence: 632 same-actor-nearby, 607 same-source, 184 same-method-and-place, 280 followed-by (chains of events in the same area within a week), and 928 similar-to (mutual nearest neighbours by embedding, cosine at least 0.85).
 - Place extraction: 74% of events get an Area and 225 also get a specific Locality. On 30 held-out hand-labelled events, an earlier version of the extractor reached precision 0.95 and recall 0.77 (see `docs/area_evaluation.md`).
 - Embeddings: all 1,664 summaries are embedded (384 dimensions) and indexed with a Neo4j vector index. 31 clusters group 80% of events; the rest are noise and get no cluster.
@@ -176,10 +176,11 @@ python src/build_graph.py --reset   # build the graph (safe to re-run)
 python src/embed_graph.py           # embeddings and vector index onto the events
 python src/similar_links.py         # SIMILAR_TO links
 python src/cluster_events.py        # clusters and the map file
-python src/check_graph.py           # 32 checks on the finished graph
+python src/components.py            # component ids for path questions
+python src/check_graph.py           # 33 checks on the finished graph
 ```
 
-The graph build itself does not need the downloaded models; the embedding step does. `build_graph.py --reset` also removes the embeddings, similarity links and clusters, so run the three steps after it again. `embed_events.py` only needs rerunning if the data or the embedding model changes. To reproduce the place-extraction comparison, run `python src/areas_gliner.py` and the evaluation notebooks; the hand-labelled files are not included because they contain GTD text.
+The graph build itself does not need the downloaded models; the embedding step does. `build_graph.py --reset` also removes the embeddings, similarity links and clusters, and leaves components.json stale, so run the four steps after it again. `embed_events.py` only needs rerunning if the data or the embedding model changes. To reproduce the place-extraction comparison, run `python src/areas_gliner.py` and the evaluation notebooks; the hand-labelled files are not included because they contain GTD text.
 
 ## Roadmap
 

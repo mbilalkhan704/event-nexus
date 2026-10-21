@@ -89,6 +89,20 @@ CLUSTER_RULES = {
     "min_cluster_size": 10,
     "random_state": 42,
 }
+
+VALIDATOR_RULES = {
+    "max_limit": 100,
+    "list_limit": 50,
+    "timeout_s": 10,
+    "max_path_hops": 6
+}
+
+FAST_DEFAULTS = {
+    "q14_k": 5,
+    "q15_k": 10,
+    "q15_min_cosine": 0.85,
+    "q15_limit": 50
+}
 ```
 
 ## Constraints and indexes
@@ -170,4 +184,4 @@ Node labels are PascalCase, relationship types are UPPER_SNAKE_CASE, and propert
 | | | GTD_RELATED | 118 |
 | | | PART_OF | 43 |
 
-`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Each Event also carries a 384-dimension `embedding` property, indexed by the vector index `event_embedding`. 928 SIMILAR_TO links connect 784 events (47%), with a maximum of 5 links per event. 1,324 events (80%) have a `cluster`; the other 340 are noise and have none (31 clusters). Rebuild with `python src/build_graph.py --reset`, then `python src/embed_graph.py`, `python src/similar_links.py` and `python src/cluster_events.py`, because the reset also removes the embeddings, SIMILAR_TO and clusters. `python src/embed_events.py` creates the cached vectors and only needs rerunning if the data or the embedding model changes. Verify with `python src/check_graph.py` (32 checks).
+`TargetOrg` ignores the placeholders "Not Applicable" and "Civilian(s)" and merges known spelling variants (see `ORG_PLACEHOLDERS` and `ORG_ALIASES` in `src/config.py`). 1,239 of 1,664 events (74%) have an Area, and 225 of them also have a Locality. Place names, spelling aliases and roll-ups live in `src/areas.py`. Each Event also carries a 384-dimension `embedding` property, indexed by the vector index `event_embedding`. 928 SIMILAR_TO links connect 784 events (47%), with a maximum of 5 links per event. 1,324 events (80%) have a `cluster`; the other 340 are noise and have none (31 clusters). Rebuild with `python src/build_graph.py --reset`, then `python src/embed_graph.py`, `python src/similar_links.py`, `python src/cluster_events.py` and `python src/components.py`, because the reset also removes the embeddings, SIMILAR_TO and clusters and leaves components.json stale. `python src/embed_events.py` creates the cached vectors and only needs rerunning if the data or the embedding model changes. Verify with `python src/check_graph.py` (33 checks). Connected components of the five event-to-event link types are saved in data/processed/components.json, not in the graph. They let path questions answer ‘no link of any length’ without searching.
