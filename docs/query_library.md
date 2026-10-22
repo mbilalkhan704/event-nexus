@@ -16,6 +16,12 @@ One entry per graph question: the question in plain words, its parameters, examp
 - The data covers **2000-01-17 to 2020-12-22** (Q0a). **Relative periods are anchored to the end of the data, not to today**: "last 5 years" means the 5 years before `data_end`. The app computes `date_from` and `date_to` and the answer must say so ("The data ends in December 2020, so I used 2016 to 2020").
 - Requests that fall wholly outside the data range are refused with that reason.
 
+### Places outside the lists
+- A place that is in neither the Area nor the Locality list (a road, court, landmark, university) is searched as text in `e.location` and `e.summary_clean`, and the query returns `'text' AS place_match`.
+- The app always shows the stored `location` and `summary` text of every event such a query returns (it fetches them with Q0c from the underscore ids), so the user can see how the text states the place.
+- The answer says the match is on text and may be incomplete. If nothing is found it says "no event text mentions X, and the data has no coordinates to search by".
+- Test result: 12 of 12 returned events were correct, but only 12 events came back from 10 names, so the pre-set count rule failed; the fallback is kept by a later decision (see `DECISIONS.md`).
+
 ### Severity
 - **Most severe = most victims killed; ties, and events with no deaths, are ranked by victims wounded.**
 - Victims killed = `nkill` - `nkillter`; victims wounded = `nwound` - `nwoundte`. GTD's totals include the perpetrators, so ranking by the raw totals would rank clashes in which only attackers died as severe. `nkillter` and `nwoundte` are the perpetrator counts.
@@ -89,7 +95,8 @@ RETURN e.eventid AS _ref, e.date AS date, a.name AS area, l.name AS locality,
        e.location AS location, e.attack_type AS attack_type,
        CASE WHEN e.nkill  IS NULL THEN null ELSE e.nkill  - coalesce(e.nkillter, 0) END AS victims_killed,
        CASE WHEN e.nwound IS NULL THEN null ELSE e.nwound - coalesce(e.nwoundte, 0) END AS victims_wounded,
-       e.nkillter AS attackers_killed;
+       e.nkillter AS attackers_killed,
+       e.summary_clean AS summary;
 ```
 
 ---

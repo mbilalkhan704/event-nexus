@@ -3,8 +3,6 @@ import pandas as pd
 from dotenv import load_dotenv
 from neo4j import GraphDatabase
 from sentence_transformers import SentenceTransformer
-from google import genai
-import time
 import ollama
 
 load_dotenv()
@@ -45,42 +43,17 @@ records, _, _ = driver.execute_query(
 )
 print("3. Embed  -> stored vector of size", records[0]["n"])
 
-def ask_llm(prompt, retries=4):
-    for attempt in range(retries):
-        try:
-            reply = client.models.generate_content(
-                model="gemini-flash-latest", contents=prompt
-            )
-            return reply.text
-        except Exception as e:
-            wait = 2 ** attempt
-            print(f"   Gemini attempt {attempt + 1} failed ({type(e).__name__}), retrying in {wait}s")
-            time.sleep(wait)
-    return None
-
-
-def ask_local(prompt):
-    r = ollama.chat(model="llama3.2:1b", messages=[{"role": "user", "content": prompt}])
-    return r["message"]["content"]
-
-
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-
 try:
-    # 4. LLM: read the node back, ask the API, fall back to the local model
+    # 4. LLM: read the node back and ask the local model (Ollama must be running)
     records, _, _ = driver.execute_query(
         "MATCH (e:SmokeTest {eventid: $eventid}) RETURN e.summary AS s",
         eventid=eventid, database_=DB,
     )
     prompt = "Summarise this incident in one sentence:\n" + records[0]["s"]
-    answer = ask_llm(prompt)
-    if answer is None:
-        print("   Gemini unavailable, trying the local model")
-        answer = ask_local(prompt)
-    print("4. LLM    ->", answer)
+    r = ollama.chat(model="llama3.2:1b", messages=[{"role": "user", "content": prompt}])
+    print("4. LLM    ->", r["message"]["content"])
 finally:
     # 5. Cleanup runs even if a step above fails
     driver.execute_query("MATCH (e:SmokeTest) DETACH DELETE e", database_=DB)
     driver.close()
     print("5. Cleanup -> done")
-    

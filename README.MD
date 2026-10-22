@@ -20,8 +20,8 @@ Every answer points back to the specific events it came from, so results can be 
 2. **Graph:** events, actors, targets, weapons, and areas are loaded into Neo4j, with links between events that share attributes.
 3. **Place extraction:** a rule-based extractor with a gazetteer assigns each event an Area (town level) and, when the text is more specific, a Locality (for example Gulshan-e-Maymar in Gadap). It was evaluated against GLiNER and a hybrid on hand-labelled events.
 4. **Embeddings and clustering:** summaries are embedded (all-MiniLM-L6-v2) and stored on the events. Events link to their mutual nearest neighbours when they are very similar, and are grouped into themes with UMAP and HDBSCAN. Embeddings capture what happened and to whom, not which campaign an event belonged to, so each similarity link also carries the gap in days and whether the events share an Area.
-5. **Trained models:** a small language model fine-tuned (QLoRA) to turn questions into graph queries or a reasoned refusal, compared with an untrained model and a prompted hosted model.
-6. **Question answering:** a language model turns questions into graph queries and summarises the results with event citations. A hosted model is used during development, with a local model (via Ollama) as the offline fallback.
+5. **Trained models:** a small language model fine-tuned (QLoRA) to turn questions into graph queries or a reasoned refusal, compared with the same model before fine-tuning.
+6. **Question answering:** a local language model (via Ollama) turns questions into graph queries and summarises the results with event citations.
 7. **Interface:** a FastAPI backend with a browser UI showing the answer, the evidence trail, and the graph.
 
 Design goal: after a one-time download of the models, the whole application runs without internet.
@@ -40,7 +40,7 @@ Design goal: after a one-time download of the models, the whole application runs
 - **Graph database:** Neo4j (local, via Neo4j Desktop)
 - **NLP:** spaCy, GLiNER, Hugging Face Transformers, sentence-transformers
 - **ML:** PyTorch, scikit-learn, UMAP
-- **Language model:** Gemini API (development) and Ollama with a small local model (offline mode)
+- **Language model:** a small local model through Ollama (offline mode)
 - **Backend:** FastAPI, Uvicorn
 - **Frontend:** plain HTML, CSS, JavaScript with D3
 - **Language:** Python 3.12
@@ -111,9 +111,6 @@ NEO4J_URI=neo4j://127.0.0.1:7687
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=your_password_here
 NEO4J_DATABASE=eventnexus-db
-
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your_key_here
 ```
 
 ### 6. Data
@@ -146,10 +143,9 @@ python src/download_models.py
 
 ### 8. Language model
 
-The application can use a hosted model or a local one.
+### 8. Language model
 
-- **Hosted (development):** create an API key in [Google AI Studio](https://aistudio.google.com) and put it in `.env` as `GEMINI_API_KEY`.
-- **Local (offline mode):** install [Ollama](https://ollama.com), then pull a small model:
+Install [Ollama](https://ollama.com), then pull a small model:
 
 ```
 ollama pull llama3.2:1b
