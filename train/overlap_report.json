@@ -1,0 +1,14 @@
+{
+  "threshold": 0.85,
+  "raw": 518,
+  "kept": 481,
+  "removed": 37,
+  "removed_by_split": {
+    "test": 8,
+    "dev": 29
+  },
+  "compared_against": {
+    "dev": 105,
+    "test": 60
+  }
+}
