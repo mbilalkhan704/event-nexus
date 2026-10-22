@@ -1,0 +1,15 @@
+How many incidents happened in Karachi in 2013?
+Which area of Karachi had the most incidents overall?
+What was the deadliest incident in the database?
+Who was the target in that incident, and how many were killed?
+Which group is blamed for the most attacks?
+How many incidents have an unknown perpetrator?
+Show me all bombings in Lyari.
+What were the most common weapons used between 2010 and 2015?
+Which year had the fewest incidents?
+How many people were killed in Karachi in 2014 in total?
+List incidents that targeted police.
+Which attacks targeted religious figures or institutions?
+What happened in Orangi Town in 2009?
+Can you give me the exact GPS coordinates of the incident in Clifton?
+Were there any attacks near Karachi airport?

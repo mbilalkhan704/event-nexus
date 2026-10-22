@@ -1,0 +1,15 @@
+How many incidents involved kidnapping?
+Which incidents are connected to the 2002 attacks?
+List all incidents in Gulshan-e-Iqbal.
+Which incident was that, and what was its date?
+What was the average number of people killed per incident?
+Which incidents occurred on a national holiday or during Muharram?
+Were there any attacks on bus or transport targets?
+Which areas are connected to each other by repeated incidents?
+Show me incidents in Malir with at least one death.
+Which incidents targeted utilities like gas or electricity infrastructure?
+What was the deadliest year, and what caused it?
+Who ordered the attack on 12 May 2007?
+Which group was responsible for attacks in Baldia Town?
+Which incidents involved suicide attackers?
+What attacks took place in North Nazimabad?

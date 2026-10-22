@@ -1,0 +1,60 @@
+{"id": "x001", "tester": "tester_1", "question": "How many incidents happened in Karachi in 2013?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x002", "tester": "tester_1", "question": "Which area of Karachi had the most incidents overall?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x003", "tester": "tester_1", "question": "What was the deadliest incident in the database?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x004", "tester": "tester_1", "question": "Who was the target in that incident, and how many were killed?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x005", "tester": "tester_1", "question": "Which group is blamed for the most attacks?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x006", "tester": "tester_1", "question": "How many incidents have an unknown perpetrator?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x007", "tester": "tester_1", "question": "Show me all bombings in Lyari.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x008", "tester": "tester_1", "question": "What were the most common weapons used between 2010 and 2015?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x009", "tester": "tester_1", "question": "Which year had the fewest incidents?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x010", "tester": "tester_1", "question": "How many people were killed in Karachi in 2014 in total?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x011", "tester": "tester_1", "question": "List incidents that targeted police.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x012", "tester": "tester_1", "question": "Which attacks targeted religious figures or institutions?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x013", "tester": "tester_1", "question": "What happened in Orangi Town in 2009?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x014", "tester": "tester_1", "question": "Can you give me the exact GPS coordinates of the incident in Clifton?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x015", "tester": "tester_1", "question": "Were there any attacks near Karachi airport?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x016", "tester": "tester_2", "question": "How many incidents involved firearms versus explosives?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x017", "tester": "tester_2", "question": "Which months tend to have the most incidents?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x018", "tester": "tester_2", "question": "Which incidents had more than 10 people wounded?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x019", "tester": "tester_2", "question": "What were the biggest attacks in 2012?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x020", "tester": "tester_2", "question": "Did attacks on journalists happen in Karachi? Which ones?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x021", "tester": "tester_2", "question": "Which groups were active in both the 2000s and the 2010s?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x022", "tester": "tester_2", "question": "How has the number of incidents changed from 2000 to 2020?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x023", "tester": "tester_2", "question": "Which incidents are linked to the same group within a few weeks?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x024", "tester": "tester_2", "question": "What attacks took place in Saddar?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x025", "tester": "tester_2", "question": "Which targets were hit most often: police, private citizens, or businesses?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x026", "tester": "tester_2", "question": "Tell me about the incident on 17 January 2000.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x027", "tester": "tester_2", "question": "Which other incidents are similar to that one?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x028", "tester": "tester_2", "question": "What was the last incident recorded in the database?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x029", "tester": "tester_2", "question": "Will there be another attack in Karachi next year?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x030", "tester": "tester_2", "question": "Which area saw the most deaths?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x031", "tester": "tester_3", "question": "Were there any assassinations of political party members?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x032", "tester": "tester_3", "question": "Show incidents where the attackers used a vehicle bomb.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x033", "tester": "tester_3", "question": "Which incidents involved attacks on educational institutions?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x034", "tester": "tester_3", "question": "Was there an attack on a foreign consulate in Karachi?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x035", "tester": "tester_3", "question": "How many incidents in 2007 had no casualties?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x036", "tester": "tester_3", "question": "Which neighbourhoods had repeated attacks within the same month?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x037", "tester": "tester_3", "question": "How is the second one connected to the first?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x038", "tester": "tester_3", "question": "What type of attack was most common in Korangi?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x039", "tester": "tester_3", "question": "Which incidents targeted the Rangers?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x040", "tester": "tester_3", "question": "Which news sources reported the most incidents?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x041", "tester": "tester_3", "question": "Compare the number of incidents in 2008 and 2018.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x042", "tester": "tester_3", "question": "Which attacks happened near a mosque or shrine?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x043", "tester": "tester_3", "question": "How does Karachi compare with Lahore for incidents?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x044", "tester": "tester_3", "question": "What happened in Karachi in the week after Benazir Bhutto's assassination?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x045", "tester": "tester_3", "question": "Which group attacked the most different types of targets?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x046", "tester": "tester_4", "question": "How many incidents involved kidnapping?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x047", "tester": "tester_4", "question": "Which incidents are connected to the 2002 attacks?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x048", "tester": "tester_4", "question": "List all incidents in Gulshan-e-Iqbal.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x049", "tester": "tester_4", "question": "Which incident was that, and what was its date?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x050", "tester": "tester_4", "question": "What was the average number of people killed per incident?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x051", "tester": "tester_4", "question": "Which incidents occurred on a national holiday or during Muharram?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x052", "tester": "tester_4", "question": "Were there any attacks on bus or transport targets?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x053", "tester": "tester_4", "question": "Which areas are connected to each other by repeated incidents?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x054", "tester": "tester_4", "question": "Show me incidents in Malir with at least one death.", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x055", "tester": "tester_4", "question": "Which incidents targeted utilities like gas or electricity infrastructure?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x056", "tester": "tester_4", "question": "What was the deadliest year, and what caused it?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x057", "tester": "tester_4", "question": "Who ordered the attack on 12 May 2007?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x058", "tester": "tester_4", "question": "Which group was responsible for attacks in Baldia Town?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x059", "tester": "tester_4", "question": "Which incidents involved suicide attackers?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
+{"id": "x060", "tester": "tester_4", "question": "What attacks took place in North Nazimabad?", "events": null, "refs": {}, "expect": null, "query_id": null, "gold": null, "note": ""}
