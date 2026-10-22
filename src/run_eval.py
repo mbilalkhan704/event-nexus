@@ -46,7 +46,14 @@ def is_correct(item, res, driver):
     if res.status != "ok":
         return False
     params = {k: v for k, v in item["refs"].items() if f"${k}" in item["gold"]}
+    kind = item.get("kind")
+    if kind == "single":
+        return qa_core.same_single(res.keys, res.rows, item["refs"]["ref"])
     gold_keys, gold_rows = qa_core.execute_readonly(driver, item["gold"], params)
+    if kind == "list":
+        f_keys, f_rows = qa_core.execute_readonly(driver, qa_core.strip_limit(item["gold"]), params)
+        key_cols = item.get("key_cols") or [k for k in f_keys if k.startswith("_")]
+        return qa_core.same_list(res.keys, res.rows, f_keys, f_rows, key_cols, item.get("unordered", False))
     return qa_core.same_result(res.keys, res.rows, gold_keys, gold_rows)
 
 
@@ -104,6 +111,7 @@ def main():
                "question": item["question"], "kind": res.kind, "status": res.status,
                "correct": ok, "seconds": res.seconds, "raw": (res.raw or "")[:1500],
                "text": res.text[:1500], "problems": res.problems, "error": res.error,
+               "qtype": item.get("kind", ""),
                "prompt_sha1": prompt_sha1}
         records.append(rec)
         out.write(json.dumps(rec, ensure_ascii=False) + "\n")
@@ -131,10 +139,15 @@ def main():
         "fast_accuracy": [sum(r["correct"] for r in fa), len(fa)],
         "per_query": {q: v for q, v in sorted(per_q.items())},
         "promotion_candidates": sorted(q for q, (k, n_) in per_q.items()
-                                       if n_ and k < 4 and q not in ("Q8", "Q10", "Q14", "Q15", "REFUSE")),
+                                       if n_ and k < 4 and q not in ("Q8", "Q10", "Q14", "Q15", "REFUSE", "AGG")),
         "statuses": dict(Counter(r["status"] for r in records)),
         "mean_seconds": round(sum(r["seconds"] for r in records) / max(1, len(records)), 2),
     }
+    per_t = defaultdict(lambda: [0, 0])
+    for r in records:
+        per_t[r.get("qtype") or "-"][0] += r["correct"]
+        per_t[r.get("qtype") or "-"][1] += 1
+    summary["per_type"] = {t: v for t, v in sorted(per_t.items())}
     with open(stem + ".summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
 

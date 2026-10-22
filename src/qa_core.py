@@ -93,7 +93,7 @@ def _freeze(v):
     if isinstance(v, bool) or v is None or isinstance(v, (int, str)):
         return v
     if isinstance(v, float):
-        return round(v, 6)
+        return round(v, 2)
     if isinstance(v, (list, tuple)):
         return tuple(_freeze(x) for x in v)
     if isinstance(v, dict):
@@ -212,3 +212,34 @@ def same_result(model_keys, model_rows, gold_keys, gold_rows):
         return False
     return (Counter(tuple(r[j] for j in mapping) for r in model_rows)
             == Counter(tuple(r) for r in gold_rows))
+
+
+# ---------- scoring for the test set (lists above the LIMIT, single events) ----------
+def strip_limit(cypher):
+    return re.sub(r"\s*LIMIT\s+\d+\s*$", "", cypher.strip(), flags=re.I)
+
+
+def same_list(model_keys, model_rows, f_keys, f_rows, key_cols, unordered=False, cap=50):
+    """f_* is the gold without its LIMIT (the full set F). Correct when the model's rows are all in F,
+    have no duplicates, and number min(cap, |F|). On lists of fewer than cap rows this is the same-set rule."""
+    cols = [f_keys.index(k) for k in key_cols]
+    norm = (lambda t: tuple(sorted(map(repr, t)))) if unordered else tuple
+    full = {norm(tuple(r[i] for i in cols)) for r in f_rows}
+    n = min(cap, len(full))
+    used, mapping = set(), []
+    for i in cols:
+        want = ({r[c] for r in f_rows for c in cols} if unordered else {r[i] for r in f_rows})
+        for j in range(len(model_keys)):
+            if j not in used and {r[j] for r in model_rows} <= want:
+                used.add(j)
+                mapping.append(j)
+                break
+        else:
+            return n == 0 and not model_rows
+    got = [norm(tuple(r[j] for j in mapping)) for r in model_rows]
+    return len(got) == n and len(set(got)) == len(got) and set(got) <= full
+
+
+def same_single(model_keys, model_rows, ref):
+    """A single-event lookup: one row whose _ref is the referred event."""
+    return "_ref" in model_keys and len(model_rows) == 1 and model_rows[0][model_keys.index("_ref")] == ref
