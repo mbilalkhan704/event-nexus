@@ -17,10 +17,15 @@ One entry per graph question: the question in plain words, its parameters, examp
 - Requests that fall wholly outside the data range are refused with that reason.
 
 ### Places outside the lists
-- A place that is in neither the Area nor the Locality list (a road, court, landmark, university) is searched as text in `e.location` and `e.summary_clean`, and the query returns `'text' AS place_match`.
+- A place in neither the Area nor the Locality list (a road, court, landmark, university) is searched as text in `e.location` and `e.summary_clean`, and the query returns `'text' AS place_match`.
 - The app always shows the stored `location` and `summary` text of every event such a query returns (it fetches them with Q0c from the underscore ids), so the user can see how the text states the place.
 - The answer says the match is on text and may be incomplete. If nothing is found it says "no event text mentions X, and the data has no coordinates to search by".
 - Test result: 12 of 12 returned events were correct, but only 12 events came back from 10 names, so the pre-set count rule failed; the fallback is kept by a later decision (see `DECISIONS.md`).
+
+### Aggregation questions (open lane)
+- Counts, totals, averages, group-by tables and top-1 or top-k rankings have no library query; the model writes them directly.
+- Totals of victims killed compute `victims_killed` in WITH and require `nkill IS NOT NULL`. Groupings by attack, weapon or target type use the type edges, so unknown values have no edge and never form a group. Years and months group on `e.date.year` and `e.date.month`.
+- The gold builders are `agg_count`, `agg_killed` and `agg_by` in `src/gold.py`. These questions have no FAST form and cannot be promoted.
 
 ### Severity
 - **Most severe = most victims killed; ties, and events with no deaths, are ranked by victims wounded.**
