@@ -2,7 +2,7 @@
 
 Knowledge-graph and NLP tool for cross-event analysis of Karachi security incidents. Links events through shared actors, targets, and areas using Neo4j, entity recognition, embeddings, and trained models, with evidence-backed answers.
 
-> **Status:** work in progress. Setup, data triage, graph design, graph build, place extraction, embeddings and clustering are complete; trained models are next.
+> **Status:** work in progress. Setup, data triage, graph design, graph build, place extraction, embeddings and clustering are complete; Phase 6 (trained models) is in progress: the validator, dev and test sets and training pairs are built, and the base-model bake-off is next.
 
 ## What it does
 
@@ -54,9 +54,12 @@ EventNexus/
 │   ├── raw/                 # source data (not tracked by git)
 │   └── processed/           # converted and cleaned datasets (not tracked by git)
 ├── docs/                    # data dictionary, graph schema, query library, area extraction evaluation
+├── eval/                    # dev and test sets (questions and gold queries), tester files, few-shot examples
 ├── models/                  # downloaded and trained models (not tracked by git)
 ├── notebooks/               # exploration and evaluation
-├── src/                     # pipeline code, graph build, place extraction, setup scripts
+├── results/                 # evaluation run outputs (no result rows)
+├── src/                     # pipeline code, graph build, place extraction, validator, QA core, evaluation scripts
+├── train/                   # training pairs for the fine-tune
 ├── .env                     # local credentials (not tracked by git)
 ├── DECISIONS.md             # log of design decisions and the reasons for them
 ├── requirements.txt         # top-level dependencies
@@ -143,8 +146,6 @@ python src/download_models.py
 
 ### 8. Language model
 
-### 8. Language model
-
 Install [Ollama](https://ollama.com), then pull a small model:
 
 ```
@@ -177,6 +178,21 @@ python src/check_graph.py           # 33 checks on the finished graph
 ```
 
 The graph build itself does not need the downloaded models; the embedding step does. `build_graph.py --reset` also removes the embeddings, similarity links and clusters, and leaves components.json stale, so run the four steps after it again. `embed_events.py` only needs rerunning if the data or the embedding model changes. To reproduce the place-extraction comparison, run `python src/areas_gliner.py` and the evaluation notebooks; the hand-labelled files are not included because they contain GTD text.
+
+### 11. Evaluation data and checks
+
+```
+python src/make_dev.py              # dev set and few-shot examples (already generated; rerunning replaces dev.jsonl)
+python src/make_dev_agg.py          # adds 10 aggregation questions to the dev set (run after make_dev.py)
+python src/make_pairs.py            # training pairs (train/pairs_raw.jsonl)
+python src/filter_pairs.py --test eval/test.jsonl   # drops pairs too close to a dev or test question
+python src/make_test.py             # builds eval/test.jsonl from eval/test_draft.jsonl
+python src/test_validator.py        # validator, parser and pipeline tests
+python src/test_scorer.py           # scorer tests against every test gold
+python src/run_eval.py --client fake --split dev --limit 10   # plumbing check, no model
+```
+
+The tester question files are in `eval/test_raw/`. The test set is frozen before any model runs.
 
 ## Roadmap
 
