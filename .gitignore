@@ -35,3 +35,6 @@ neo4j/logs/
 Thumbs.db
 .vscode/
 .idea/
+results/
+results_hf/
+print_directory.py
