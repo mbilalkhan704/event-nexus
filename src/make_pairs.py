@@ -728,6 +728,13 @@ make_fast(14)
 fill("AGG", 44, m_agg)
 make_refusals()
 
+# Q12 wording is answered by the Q10 handler (decision of 2026-10-24): relabel after generation,
+# so the random stream, and with it every other pair, stays identical.
+for p in pairs:
+    if p["query_id"] == "Q12":
+        p.update(query_id="Q10", type="fast", reply="FAST: Q10")
+    elif p["query_id"] == "Q1":      # promoted to FAST on 2026-10-24 (under 4 of 5 on dev)
+        p.update(type="fast", reply="FAST: Q1")
 rng.shuffle(pairs)
 for i, p in enumerate(pairs, 1):
     p["id"] = f"t{i:04d}"

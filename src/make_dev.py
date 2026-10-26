@@ -591,7 +591,7 @@ def g_q13(i):
 for i, gen in enumerate([g_q0b_1, g_q0b_2, g_q0b_3, g_q0b_4, g_q0b_5], 1):
     add_spec("Q0b", i, pick(gen(), f"Q0b/{i}"))
 for i, ((text, ev), ref) in enumerate(zip(Q1_TEXT, ref_pool), 1):
-    add("Q1", i, text, ev, {"ref": ref}, "cypher", Q1_GOLD)
+    add("Q1", i, text, ev, {"ref": ref}, "fast", "Q1")
 for qid, fn in (("Q2", g_q2), ("Q3", g_q3), ("Q4", g_q4)):
     for i in range(1, 6):
         add_spec(qid, i, pick(fn(i), f"{qid}/{i}"))
@@ -612,7 +612,8 @@ for i, text in enumerate(Q12_TEXT, 1):
     for a, b in pairs:
         spec = Spec(text, Q12_GOLD, 2, {"ref_a": a, "ref_b": b})
         if problem(spec) is None:
-            add_spec("Q12", i, spec)
+            # Q12 wording is answered by the Q10 handler: same route, so same gold. The pair draw stays as is.
+            add("Q10", 5 + i, spec.question, spec.events, spec.refs, "fast", "Q10")
             break
     else:
         raise SystemExit(f"Q12/{i}: no linked pair with a usable result")
