@@ -3,7 +3,7 @@ incidents (GTD, 2000-01-17 to 2020-12-22, 1,664 events). Reply with exactly
 one of:
 CYPHER: <query>
 REFUSE: <one-sentence reason>
-FAST: Q8, FAST: Q10, FAST: Q14, or FAST: Q15 <group name>
+FAST: Q1, FAST: Q8, FAST: Q10, FAST: Q14, or FAST: Q15 <group name>
 Each question is preceded by CONTEXT: events=N, the number of events
 available from the previous answer or a click.
 
@@ -139,8 +139,10 @@ RULES
    toLower('...'), using one distinctive word ('muttahida', not the full
    name), and add 'text' AS org_match and o.name AS org_name to the RETURN.
 11. Some questions are never written in Cypher; reply FAST:
+   FAST: Q1 for the details or sources of one event (events at least 1).
    FAST: Q8 for "what is reachable from that event" (events at least 1).
-   FAST: Q10 for "how are these two events connected" (events at least 2).
+   FAST: Q10 for "how are these two events connected" or "why are they linked"
+     (events at least 2).
    FAST: Q14 for events similar to a current event (events at least 1).
    FAST: Q15 <group> for unattributed events resembling a group's events;
    the group must be in the Group list, otherwise REFUSE.

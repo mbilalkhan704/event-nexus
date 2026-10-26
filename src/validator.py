@@ -19,7 +19,7 @@ REL_TYPES = {"ATTRIBUTED_TO", "OCCURRED_IN", "OCCURRED_AT", "PART_OF", "REPORTED
 ALLOWED_PARAMS = {"ref": 1, "ref_a": 2, "ref_b": 2}   # parameter -> events needed in context
 WRITE_WORDS = ("CREATE", "MERGE", "DELETE", "DETACH", "SET", "REMOVE", "DROP",
                "CALL", "LOAD", "FOREACH")
-FAST_SIMPLE = {"Q8": 1, "Q10": 2, "Q14": 1}           # query -> events needed in context
+FAST_SIMPLE = {"Q1": 1, "Q8": 1, "Q10": 2, "Q14": 1}           # query -> events needed in context
 NAME_LABELS = ("Group", "Area", "Locality", "AttackType", "WeaponType", "TargetType")
 TYPE_PROPS = {"attack_type": "AttackType", "weapon_type": "WeaponType", "target_type": "TargetType"}
 
@@ -154,7 +154,7 @@ def validate_cypher(query, events=0, names=None, rules=VALIDATOR_RULES):
 def validate_fast(text, events=0, groups=None):
     """Check.query holds the normalised call: 'Q8', 'Q10', 'Q14' or 'Q15 <group>'."""
     t = (text or "").strip()
-    m = re.fullmatch(r"(Q8|Q10|Q14)", t, re.I)
+    m = re.fullmatch(r"(Q10|Q14|Q1|Q8)", t, re.I)
     if m:
         q = m.group(1).upper()
         if events < FAST_SIMPLE[q]:
@@ -166,7 +166,7 @@ def validate_fast(text, events=0, groups=None):
         if groups is not None and group not in groups:
             return Check(False, [f"group '{group}' is not in the list"], query=f"Q15 {group}")
         return Check(True, query=f"Q15 {group}")
-    return Check(False, ["FAST must be Q8, Q10, Q14 or Q15 <group>"], query=t)
+    return Check(False, ["FAST must be Q1, Q8, Q10, Q14 or Q15 <group>"], query=t)
 
 
 def exposed_id_columns(keys, rows):
