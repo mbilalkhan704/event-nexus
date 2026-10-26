@@ -68,9 +68,14 @@ def main():
     ap.add_argument("--fewshot", action="store_true")
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--resume", default="", help="existing results .jsonl to continue")
+    ap.add_argument("--replies", default="", help="stored replies .jsonl for --client replay")
+    ap.add_argument("--queries", default="", help="comma-separated query ids to run, e.g. Q4,Q5")
     args = ap.parse_args()
 
     items = load(f"eval/{args.split}.jsonl")
+    if args.queries:
+        keep = {q.strip() for q in args.queries.split(",")}
+        items = [it for it in items if it["query_id"] in keep]
     if args.limit:
         step = max(1, len(items) // args.limit)
         items = items[::step][:args.limit]
@@ -79,7 +84,7 @@ def main():
     if args.fewshot:
         fewshot = [(qa_core.build_user_message(e["question"], e["events"]), e["reply"])
                    for e in load("eval/fewshot.jsonl")]
-    client = clients.get_client(args.client, fewshot)
+    client = clients.get_client(args.client, fewshot, replies=args.replies, split=args.split)
     prompt = qa_core.load_prompt()
     prompt_sha1 = hashlib.sha1(prompt.encode("utf-8")).hexdigest()[:12]
     driver = get_driver()
@@ -94,7 +99,7 @@ def main():
         if any(r.get("prompt_sha1") != prompt_sha1 for r in records):
             sys.exit("the prompt changed since that run; start a fresh run")
     else:
-        stem = f"results/{args.split}_{args.client}_{datetime.now():%Y%m%d_%H%M%S}"
+        stem = f"results/{args.split}_{client.name}_{datetime.now():%Y%m%d_%H%M%S}"
     out_path = stem + ".jsonl"
     done = {r["id"] for r in records}
     if done:
@@ -139,7 +144,7 @@ def main():
         "fast_accuracy": [sum(r["correct"] for r in fa), len(fa)],
         "per_query": {q: v for q, v in sorted(per_q.items())},
         "promotion_candidates": sorted(q for q, (k, n_) in per_q.items()
-                                       if n_ and k < 4 and q not in ("Q8", "Q10", "Q14", "Q15", "REFUSE", "AGG")),
+                                       if n_ and k < 4 and q not in ("Q1", "Q8", "Q10", "Q14", "Q15", "REFUSE", "AGG")),
         "statuses": dict(Counter(r["status"] for r in records)),
         "mean_seconds": round(sum(r["seconds"] for r in records) / max(1, len(records)), 2),
     }
