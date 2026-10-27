@@ -116,7 +116,7 @@ FAST_DEFAULTS = {
 
 ## Example queries
 
-These illustrate the intended use. They are verified in Phase 7.
+These illustrate the intended use. They are verified in Phase 7. They are written for the Neo4j browser: the app and the model return event ids only in underscore columns.
 
 Campaign links within a week:
 
@@ -126,10 +126,11 @@ WHERE r.gap_days <= 7
 RETURN a.eventid, b.eventid, r.gap_days
 ```
 
-Why are two events linked?
+Why are two events linked? (direct links only; the Q10 handler starts with the Q12 query in docs/query_library.md, which also adds shared sources)
 
 ```cypher
-MATCH (a:Event {eventid: $a})-[r]-(b:Event {eventid: $b})
+MATCH (a:Event {eventid: $ref_a})-[r]-(b:Event {eventid: $ref_b})
+WHERE type(r) <> 'GTD_RELATED'
 RETURN type(r), r.rule, r.strength, r.evidence
 ```
 

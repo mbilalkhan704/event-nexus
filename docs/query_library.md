@@ -27,6 +27,12 @@ One entry per graph question: the question in plain words, its parameters, examp
 - Totals of victims killed compute `victims_killed` in WITH and require `nkill IS NOT NULL`. Groupings by attack, weapon or target type use the type edges, so unknown values have no edge and never form a group. Years and months group on `e.date.year` and `e.date.month`.
 - The gold builders are `agg_count`, `agg_killed` and `agg_by` in `src/gold.py`. These questions have no FAST form and cannot be promoted.
 
+### Lanes
+- Fast lane (the model replies FAST: and the app runs the library query with its own parameters): Q1, Q8, Q10, Q14 and Q15 <group>. Q14 and Q15 call the vector index with CALL, which the open lane never allows. Parameters come from the event context (events=N) or the named group; the app sets k, min_cosine and limit from FAST_DEFAULTS.
+- Open lane (the model writes read-only Cypher, validated before it runs): Q0b, Q2 to Q7, Q9, Q11 and Q13, plus aggregation questions. The entries below are the reference forms behind the gold queries.
+- Q12 has no route of its own. "Why are these two events linked" goes to FAST: Q10, and the Q12 query is the first step of the Q10 handler.
+- Q1 became FAST through the dev promotion rule (it takes only $ref). Q3, Q4, Q7 and Q9 also triggered the rule but stay open lane, because FAST has no parameter syntax. See DECISIONS.md.
+
 ### Severity
 - **Most severe = most victims killed; ties, and events with no deaths, are ranked by victims wounded.**
 - Victims killed = `nkill` - `nkillter`; victims wounded = `nwound` - `nwoundte`. GTD's totals include the perpetrators, so ranking by the raw totals would rank clashes in which only attackers died as severe. `nkillter` and `nwoundte` are the perpetrator counts.
@@ -113,6 +119,8 @@ RETURN e.eventid AS _ref, e.date AS date, a.name AS area, l.name AS locality,
 `$ref` comes from the finder, the previous answer, or a graph click.
 
 Parameters: `$ref`
+
+Lane: fast. The model replies FAST: Q1, with at least 1 event in context.
 
 Example phrasings (the app resolves "which event" first): "Tell me more about the second one." / "What are the sources for that attack?" / "Give me the full details of the deadliest incident."
 
@@ -341,13 +349,16 @@ ORDER BY events DESC
 LIMIT $limit;
 ```
 
-### Q10. Shortest explanation path between two events
+### Q10. How and why are two events connected?
 
-No rows means no path within 6 hops.
+Lane: fast (FAST: Q10, at least 2 events in context). The handler runs in order:
+1. The Q12 query below: direct links and shared sources. If it finds any, the answer uses them.
+2. The component check from data/processed/components.json. If the two events lie in different components of the five link types, the answer is "no link of any length" and the query is skipped.
+3. Otherwise the shortest-path query below. No rows means no chain of up to 6 links, although the events are connected through a longer chain.
 
 Parameters: `$ref_a`, `$ref_b`
 
-Example phrasings: "How are these two attacks connected?" / "Find the link between the first and the third one."
+Example phrasings: "How are these two attacks connected?" / "Find the link between the first and the third one." / "Why are these two attacks linked?"
 
 ```cypher
 MATCH (a:Event {eventid: $ref_a}), (b:Event {eventid: $ref_b})
@@ -393,9 +404,9 @@ ORDER BY shared DESC;
 
 ## Tier 4. Provenance
 
-### Q12. Why are these two events linked?
+### Q12. Why are these two events linked? (step 1 of the Q10 handler)
 
-Direct links first, then shared sources. Empty `links` and no shared sources means no direct link: use Q10 for an indirect explanation. `GTD_RELATED` is excluded on purpose.
+Not a separate route: the model replies FAST: Q10 for this wording. Direct links first, then shared sources. Empty `links` and no shared sources means no direct link, and the handler continues with the component check and the shortest path (Q10). `GTD_RELATED` is excluded on purpose.
 
 Parameters: `$ref_a`, `$ref_b`
 
