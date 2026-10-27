@@ -1,0 +1,110 @@
+{
+  "client": "llm_gemma4e4b-v3deq-q8-test",
+  "fewshot": false,
+  "split": "test",
+  "items": 60,
+  "date": "2026-10-27T16:16:48",
+  "prompt_sha1": "90becf530b89",
+  "execution_accuracy": [
+    24,
+    53
+  ],
+  "valid_query_rate": [
+    46,
+    51
+  ],
+  "refusals_made_when_needed": [
+    3,
+    5
+  ],
+  "wrongly_refused": [
+    2,
+    55
+  ],
+  "fast_accuracy": [
+    2,
+    2
+  ],
+  "per_query": {
+    "AGG": [
+      9,
+      23
+    ],
+    "LINK": [
+      0,
+      2
+    ],
+    "ORG": [
+      1,
+      1
+    ],
+    "PLACE": [
+      1,
+      1
+    ],
+    "Q0b": [
+      13,
+      23
+    ],
+    "Q1": [
+      0,
+      2
+    ],
+    "Q10": [
+      1,
+      1
+    ],
+    "Q14": [
+      1,
+      1
+    ],
+    "Q3": [
+      0,
+      1
+    ],
+    "REFUSE": [
+      3,
+      5
+    ]
+  },
+  "promotion_candidates": [
+    "LINK",
+    "ORG",
+    "PLACE",
+    "Q3"
+  ],
+  "statuses": {
+    "ok": 46,
+    "fast": 4,
+    "rejected": 2,
+    "refused": 5,
+    "error": 3
+  },
+  "mean_seconds": 41.34,
+  "per_type": {
+    "agg": [
+      7,
+      15
+    ],
+    "fast": [
+      2,
+      2
+    ],
+    "list": [
+      13,
+      25
+    ],
+    "ranked": [
+      4,
+      11
+    ],
+    "refuse": [
+      3,
+      5
+    ],
+    "single": [
+      0,
+      2
+    ]
+  }
+}
